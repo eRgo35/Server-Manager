@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using System.Threading;
 using Renci.SshNet;
-using Renci.SshNet.Common;
+using System.Net;
+using System.Net.Sockets;
+using System.Globalization;
+using System.Net.NetworkInformation;
+using System.Text.RegularExpressions;
 
 namespace Server_Manager
 {
@@ -23,12 +26,12 @@ namespace Server_Manager
 
         private void Open_win_exporer_Click(object sender, EventArgs e)
         {
-            var OSIP = Properties.Settings.Default.OSIP;
+            var IP = Properties.Settings.Default.IP;
             Thread exp = new Thread(() =>
             {
                 _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
                 {
-                    FileName = "\\\\" + OSIP + "\\",
+                    FileName = "\\\\" + IP + "\\",
                     UseShellExecute = true,
                     Verb = "open"
                 });
@@ -36,183 +39,219 @@ namespace Server_Manager
             exp.Start();
         }
 
-        private bool checkNetCardIP()
+        private bool Ping_IP()
         {
-            var NetCardIP = Properties.Settings.Default.NetCardIP;
-
-            System.Net.NetworkInformation.Ping objping = new System.Net.NetworkInformation.Ping();
-            if (objping.Send(NetCardIP, 1000).Status == System.Net.NetworkInformation.IPStatus.Success)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private bool checkOSIP()
-        {
-            var OSIP = Properties.Settings.Default.OSIP;
-
-            System.Net.NetworkInformation.Ping objping = new System.Net.NetworkInformation.Ping();
-            if (objping.Send(OSIP, 1000).Status == System.Net.NetworkInformation.IPStatus.Success)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            var IP = Properties.Settings.Default.IP;
+            Ping objping = new Ping();
+            if (objping.Send(IP, 500).Status == IPStatus.Success) { return true; } else { return false; }
         }
 
         private void Main_Load(object sender, EventArgs e)
         {
-            // timer1.Start();
+            Auto_Ping.Start();
 
             Thread pingTest = new Thread(() =>
             {
-                NetCardStatus = checkNetCardIP();
-                OSStatus = checkOSIP();
-                Action action = new Action(SetColorsofLabels);
+                Status = Ping_IP();
+                Action action = new Action(Update_Labels);
                 BeginInvoke(action);
             });
             pingTest.Start();
         }
 
-        bool NetCardStatus = false;
-        bool OSStatus = false;
+        bool Status = false;
 
         private void Ping_button_Click(object sender, EventArgs e)
         {
             Thread pingTest = new Thread(() =>
             {
-                NetCardStatus = checkNetCardIP();
-                OSStatus = checkOSIP();
-                Action action = new Action(SetColorsofLabels);
+                Status = Ping_IP();
+                Action action = new Action(Update_Labels);
                 BeginInvoke(action);
             });
             pingTest.Start();
 
-            ping_button.Enabled = false;
+            Ping_Button.Enabled = false;
             label3.Text = "CHECKING...";
             label3.ForeColor = Color.Black;
-            label4.Text = "CHECKING...";
-            label4.ForeColor = Color.Black;
         }
 
-        private void SetColorsofLabels()
+        private void Update_Labels()
         {
-            if (NetCardStatus == true)
+            if (Status == true)
             {
                 label3.Text = "ONLINE";
                 label3.ForeColor = Color.Green;
+                Power_ON.Enabled = false;
+                Power_OFF.Enabled = true;
+                Open_Win_Explorer.Enabled = true;
             }
             else
             {
                 label3.Text = "OFFLINE";
                 label3.ForeColor = Color.Red;
+                Power_ON.Enabled = true;
+                Power_OFF.Enabled = false;
+                Open_Win_Explorer.Enabled = false;
             }
-            if (OSStatus == true)
+            Ping_Button.Enabled = true;
+        }
+
+        private void Update_Labels_Auto()
+        {
+            if (Status == true)
             {
-                label4.Text = "ONLINE";
-                label4.ForeColor = Color.Green;
+                if (Power_ON.Text == "Booting...")
+                {
+                    Power_ON.Enabled = false;
+                    Power_OFF.Enabled = true;
+                    Open_Win_Explorer.Enabled = true;
+                }
+                label3.Text = "ONLINE";
+                label3.ForeColor = Color.Green;
             }
             else
             {
-                label4.Text = "OFFLINE";
-                label4.ForeColor = Color.Red;
+                if (Power_OFF.Text == "Shutting Down...")
+                {
+                    Power_ON.Enabled = true;
+                    Power_OFF.Enabled = false;
+                    Open_Win_Explorer.Enabled = false;
+                }
+                label3.Text = "OFFLINE";
+                label3.ForeColor = Color.Red;
+            }
+        }
+
+        static long IPToInt(string addr)
+        {
+            return (long) (uint) IPAddress.NetworkToHostOrder(
+                (int) IPAddress.Parse(addr).Address
+            );
+        }
+
+        private static void WakeUp(string macAddress)
+        {
+            var IP = Properties.Settings.Default.BroadcastIP;
+            string[] Tmp_IP = IP.Split('.');
+            Array.Reverse(Tmp_IP);
+            string Final_IP = string.Join(".", Tmp_IP);
+            var Hex_IP = IPToInt(Final_IP);
+
+            int Port = int.Parse(Properties.Settings.Default.Port);
+            string Str_Port = Port.ToString("X");
+            int Hex_Port = int.Parse(Str_Port , NumberStyles.HexNumber);
+
+            MessageBox.Show(Hex_IP.ToString());
+
+            WOLClass client = new WOLClass();
+            client.Connect(new IPAddress(Hex_IP), Hex_Port);
+            client.SetClientToBroadcastMode();
+
+            int counter = 0;
+
+            byte[] bytes = new byte[1024];
+
+            for (int e = 0; e < 6; e++)
+            {
+                bytes[counter++] = 0xFF;
             }
 
-            if (label3.Text == "OFFLINE" && label4.Text == "OFFLINE")
+            for (int e = 0; e < 16; e++)
             {
-                power_on.Enabled = false;
-                power_off.Enabled = false;
-                open_win_exporer.Enabled = false;
+                int i = 0;
+
+                for (int w = 0; w < 6; w++)
+                {
+                    bytes[counter++] = byte.Parse(macAddress.Substring(i, 2), NumberStyles.HexNumber);
+                    i += 2;
+                }
             }
-            else if (label3.Text == "ONLINE" && label4.Text == "OFFLINE")
+
+            int returnedValue = client.Send(bytes, 1024);
+        }
+
+        public class WOLClass : UdpClient
+        {
+            public WOLClass()
+                : base()
             {
-                power_on.Enabled = true;
-                power_off.Enabled = false;
-                open_win_exporer.Enabled = false;
+
             }
-            else if (label3.Text == "ONLINE" && label4.Text == "ONLINE")
+
+            public void SetClientToBroadcastMode()
             {
-                power_on.Enabled = false;
-                power_off.Enabled = true;
-                open_win_exporer.Enabled = true;
+                if (this.Active)
+                {
+                    this.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 0);
+                }
             }
-            ping_button.Enabled = true;
         }
 
         private void Power_on_Click(object sender, EventArgs e)
         {
-            power_on.Enabled = false;
-            power_on.Text = "Booting...";
+            var MAC = Regex.Replace(Properties.Settings.Default.MAC, @"[^0-9a-fA-F]+", "");
 
-            var clientip = Properties.Settings.Default.NetCardIP;
-            var username = Properties.Settings.Default.NetCardUser;
-            var password = Properties.Settings.Default.NetCardPass;
-            var boot = Properties.Settings.Default.StartCmd;
-
-            var authMethod = new KeyboardInteractiveAuthenticationMethod(username);
-            authMethod.AuthenticationPrompt += (sender2, d) =>
+            if (MessageBox.Show("Are you sure?", "Power ON", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                d.Prompts.Single().Response = password;
-            };
-
-            using (var client = new SshClient(clientip, username, authMethod.ToString()))
+                Power_ON.Enabled = false;
+                Power_ON.Text = "Booting...";
+                WakeUp(MAC);
+                Power_ON.Text = "Power ON";
+            }
+            else
             {
-                try
-                {
-                    client.HostKeyReceived += delegate (object s, HostKeyEventArgs c)
-                    {
-                        c.CanTrust = true;
-                    };
-                    client.Connect();
-                    client.RunCommand(boot).Execute();
-                    MessageBox.Show("Test");
-                    client.Disconnect();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.ToString(), "Error! Unable to Power ON!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    client.Dispose();
-                    power_on.Text = "Power ON";
-                    power_on.Enabled = true;
-                }
+                Power_ON.Enabled = true;
+                Power_ON.Text = "Power ON";
             }
         }
 
         private void Power_off_Click(object sender, EventArgs e)
         {
-            power_off.Enabled = false;
-            power_off.Text = "Shutting Down...";
-            var clientip = Properties.Settings.Default.OSIP;
-            var username = Properties.Settings.Default.OSUser;
-            var password = Properties.Settings.Default.OSPass;
-            var shutdown = Properties.Settings.Default.ShutDwnCmd;
-
-            using (var client = new SshClient(clientip, username, password))
+            if (MessageBox.Show("Are you sure?", "Power OFF", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                try
+                Power_OFF.Enabled = false;
+                Power_OFF.Text = "Shutting Down...";
+                var IP = Properties.Settings.Default.IP;
+                var Username = Properties.Settings.Default.Username;
+                var Password = Properties.Settings.Default.Password;
+                var CMD = Properties.Settings.Default.ShutdownCMD;
+
+                using (var client = new SshClient(IP, Username, Password))
                 {
-                    client.Connect();
-                    client.RunCommand(shutdown);
-                    client.Disconnect();
+                    try
+                    {
+                        client.Connect();
+                        client.RunCommand(CMD);
+                        client.Disconnect();
+                        Power_OFF.Enabled = true;
+                        Power_OFF.Text = "Power OFF";
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Unable to Power OFF - Connection Refused", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        client.Dispose();
+                        Power_OFF.Enabled = true;
+                        Power_OFF.Text = "Power OFF";
+                    }
                 }
-                catch
-                {
-                    MessageBox.Show("Unable to Power OFF - Connection Refused", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    client.Dispose();
-                    power_off.Text = "Power OFF";
-                }
+            }
+            else
+            {
+                Power_OFF.Enabled = true;
+                Power_OFF.Text = "Power OFF";
             }
         }
 
-        private void Timer1_Tick(object sender, EventArgs e)
+        private void Auto_Ping_Tick(object sender, EventArgs e)
         {
-            ping_button.PerformClick();
+            Thread pingTest = new Thread(() =>
+            {
+                Status = Ping_IP();
+                Action action = new Action(Update_Labels_Auto);
+                BeginInvoke(action);
+            });
+            pingTest.Start();
         }
     }
 }

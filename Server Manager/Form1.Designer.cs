@@ -30,78 +30,65 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
-            this.ping_button = new System.Windows.Forms.Button();
-            this.power_on = new System.Windows.Forms.Button();
-            this.power_off = new System.Windows.Forms.Button();
+            this.Ping_Button = new System.Windows.Forms.Button();
+            this.Power_ON = new System.Windows.Forms.Button();
+            this.Power_OFF = new System.Windows.Forms.Button();
             this.Ping_Stuff = new System.Windows.Forms.GroupBox();
-            this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.Power = new System.Windows.Forms.GroupBox();
             this.Explore_Settings = new System.Windows.Forms.GroupBox();
-            this.settings = new System.Windows.Forms.Button();
-            this.open_win_exporer = new System.Windows.Forms.Button();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.Settings = new System.Windows.Forms.Button();
+            this.Open_Win_Explorer = new System.Windows.Forms.Button();
+            this.Auto_Ping = new System.Windows.Forms.Timer(this.components);
             this.Ping_Stuff.SuspendLayout();
             this.Power.SuspendLayout();
             this.Explore_Settings.SuspendLayout();
             this.SuspendLayout();
             // 
-            // ping_button
+            // Ping_Button
             // 
-            this.ping_button.Location = new System.Drawing.Point(6, 71);
-            this.ping_button.Name = "ping_button";
-            this.ping_button.Size = new System.Drawing.Size(259, 25);
-            this.ping_button.TabIndex = 0;
-            this.ping_button.Text = "Check Status";
-            this.ping_button.UseVisualStyleBackColor = true;
-            this.ping_button.Click += new System.EventHandler(this.Ping_button_Click);
+            this.Ping_Button.Location = new System.Drawing.Point(6, 36);
+            this.Ping_Button.Name = "Ping_Button";
+            this.Ping_Button.Size = new System.Drawing.Size(259, 25);
+            this.Ping_Button.TabIndex = 0;
+            this.Ping_Button.Text = "Check Status";
+            this.Ping_Button.UseVisualStyleBackColor = true;
+            this.Ping_Button.Click += new System.EventHandler(this.Ping_button_Click);
             // 
-            // power_on
+            // Power_ON
             // 
-            this.power_on.Enabled = false;
-            this.power_on.Location = new System.Drawing.Point(5, 19);
-            this.power_on.Name = "power_on";
-            this.power_on.Size = new System.Drawing.Size(259, 25);
-            this.power_on.TabIndex = 1;
-            this.power_on.Text = "Power ON";
-            this.power_on.UseVisualStyleBackColor = true;
-            this.power_on.Click += new System.EventHandler(this.Power_on_Click);
+            this.Power_ON.Enabled = false;
+            this.Power_ON.Location = new System.Drawing.Point(5, 19);
+            this.Power_ON.Name = "Power_ON";
+            this.Power_ON.Size = new System.Drawing.Size(259, 25);
+            this.Power_ON.TabIndex = 1;
+            this.Power_ON.Text = "Power ON";
+            this.Power_ON.UseVisualStyleBackColor = true;
+            this.Power_ON.Click += new System.EventHandler(this.Power_on_Click);
             // 
-            // power_off
+            // Power_OFF
             // 
-            this.power_off.Enabled = false;
-            this.power_off.Location = new System.Drawing.Point(5, 50);
-            this.power_off.Name = "power_off";
-            this.power_off.Size = new System.Drawing.Size(259, 25);
-            this.power_off.TabIndex = 2;
-            this.power_off.Text = "Power OFF";
-            this.power_off.UseVisualStyleBackColor = true;
-            this.power_off.Click += new System.EventHandler(this.Power_off_Click);
+            this.Power_OFF.Enabled = false;
+            this.Power_OFF.Location = new System.Drawing.Point(5, 50);
+            this.Power_OFF.Name = "Power_OFF";
+            this.Power_OFF.Size = new System.Drawing.Size(259, 25);
+            this.Power_OFF.TabIndex = 2;
+            this.Power_OFF.Text = "Power OFF";
+            this.Power_OFF.UseVisualStyleBackColor = true;
+            this.Power_OFF.Click += new System.EventHandler(this.Power_off_Click);
             // 
             // Ping_Stuff
             // 
-            this.Ping_Stuff.Controls.Add(this.label4);
             this.Ping_Stuff.Controls.Add(this.label3);
-            this.Ping_Stuff.Controls.Add(this.label2);
             this.Ping_Stuff.Controls.Add(this.label1);
-            this.Ping_Stuff.Controls.Add(this.ping_button);
+            this.Ping_Stuff.Controls.Add(this.Ping_Button);
             this.Ping_Stuff.Location = new System.Drawing.Point(12, 12);
             this.Ping_Stuff.Name = "Ping_Stuff";
-            this.Ping_Stuff.Size = new System.Drawing.Size(271, 105);
+            this.Ping_Stuff.Size = new System.Drawing.Size(271, 74);
             this.Ping_Stuff.TabIndex = 3;
             this.Ping_Stuff.TabStop = false;
             this.Ping_Stuff.Text = "Server Status";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(194, 44);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(71, 13);
-            this.label4.TabIndex = 4;
-            this.label4.Text = "CHECKING...";
             // 
             // label3
             // 
@@ -111,15 +98,6 @@
             this.label3.Size = new System.Drawing.Size(71, 13);
             this.label3.TabIndex = 3;
             this.label3.Text = "CHECKING...";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(7, 44);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(123, 13);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "Operating System Status";
             // 
             // label1
             // 
@@ -132,9 +110,9 @@
             // 
             // Power
             // 
-            this.Power.Controls.Add(this.power_on);
-            this.Power.Controls.Add(this.power_off);
-            this.Power.Location = new System.Drawing.Point(13, 124);
+            this.Power.Controls.Add(this.Power_ON);
+            this.Power.Controls.Add(this.Power_OFF);
+            this.Power.Location = new System.Drawing.Point(13, 92);
             this.Power.Name = "Power";
             this.Power.Size = new System.Drawing.Size(270, 86);
             this.Power.TabIndex = 4;
@@ -143,45 +121,45 @@
             // 
             // Explore_Settings
             // 
-            this.Explore_Settings.Controls.Add(this.settings);
-            this.Explore_Settings.Controls.Add(this.open_win_exporer);
-            this.Explore_Settings.Location = new System.Drawing.Point(13, 217);
+            this.Explore_Settings.Controls.Add(this.Settings);
+            this.Explore_Settings.Controls.Add(this.Open_Win_Explorer);
+            this.Explore_Settings.Location = new System.Drawing.Point(13, 184);
             this.Explore_Settings.Name = "Explore_Settings";
             this.Explore_Settings.Size = new System.Drawing.Size(270, 85);
             this.Explore_Settings.TabIndex = 5;
             this.Explore_Settings.TabStop = false;
             this.Explore_Settings.Text = "Explore and Settings";
             // 
-            // settings
+            // Settings
             // 
-            this.settings.Location = new System.Drawing.Point(9, 49);
-            this.settings.Name = "settings";
-            this.settings.Size = new System.Drawing.Size(255, 23);
-            this.settings.TabIndex = 1;
-            this.settings.Text = "Settings";
-            this.settings.UseVisualStyleBackColor = true;
-            this.settings.Click += new System.EventHandler(this.Settings_Click);
+            this.Settings.Location = new System.Drawing.Point(9, 49);
+            this.Settings.Name = "Settings";
+            this.Settings.Size = new System.Drawing.Size(255, 23);
+            this.Settings.TabIndex = 1;
+            this.Settings.Text = "Settings";
+            this.Settings.UseVisualStyleBackColor = true;
+            this.Settings.Click += new System.EventHandler(this.Settings_Click);
             // 
-            // open_win_exporer
+            // Open_Win_Explorer
             // 
-            this.open_win_exporer.Location = new System.Drawing.Point(9, 20);
-            this.open_win_exporer.Name = "open_win_exporer";
-            this.open_win_exporer.Size = new System.Drawing.Size(255, 23);
-            this.open_win_exporer.TabIndex = 0;
-            this.open_win_exporer.Text = "Open in Windows Explorer";
-            this.open_win_exporer.UseVisualStyleBackColor = true;
-            this.open_win_exporer.Click += new System.EventHandler(this.Open_win_exporer_Click);
+            this.Open_Win_Explorer.Location = new System.Drawing.Point(9, 20);
+            this.Open_Win_Explorer.Name = "Open_Win_Explorer";
+            this.Open_Win_Explorer.Size = new System.Drawing.Size(255, 23);
+            this.Open_Win_Explorer.TabIndex = 0;
+            this.Open_Win_Explorer.Text = "Open in Windows Explorer";
+            this.Open_Win_Explorer.UseVisualStyleBackColor = true;
+            this.Open_Win_Explorer.Click += new System.EventHandler(this.Open_win_exporer_Click);
             // 
-            // timer1
+            // Auto_Ping
             // 
-            this.timer1.Interval = 8000;
-            this.timer1.Tick += new System.EventHandler(this.Timer1_Tick);
+            this.Auto_Ping.Interval = 8000;
+            this.Auto_Ping.Tick += new System.EventHandler(this.Auto_Ping_Tick);
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(295, 314);
+            this.ClientSize = new System.Drawing.Size(295, 282);
             this.Controls.Add(this.Explore_Settings);
             this.Controls.Add(this.Power);
             this.Controls.Add(this.Ping_Stuff);
@@ -202,19 +180,17 @@
 
         #endregion
 
-        private System.Windows.Forms.Button ping_button;
-        private System.Windows.Forms.Button power_on;
-        private System.Windows.Forms.Button power_off;
+        private System.Windows.Forms.Button Ping_Button;
+        private System.Windows.Forms.Button Power_ON;
+        private System.Windows.Forms.Button Power_OFF;
         private System.Windows.Forms.GroupBox Ping_Stuff;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.GroupBox Power;
         private System.Windows.Forms.GroupBox Explore_Settings;
-        private System.Windows.Forms.Button settings;
-        private System.Windows.Forms.Button open_win_exporer;
-        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Button Settings;
+        private System.Windows.Forms.Button Open_Win_Explorer;
+        private System.Windows.Forms.Timer Auto_Ping;
     }
 }
 

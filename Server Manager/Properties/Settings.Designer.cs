@@ -12,7 +12,7 @@ namespace Server_Manager.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.4.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.8.1.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -25,97 +25,85 @@ namespace Server_Manager.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("192.168.0.200")]
-        public string NetCardIP {
+        [global::System.Configuration.DefaultSettingValueAttribute("192.168.0.250")]
+        public string IP {
             get {
-                return ((string)(this["NetCardIP"]));
+                return ((string)(this["IP"]));
             }
             set {
-                this["NetCardIP"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("192.168.0.17")]
-        public string OSIP {
-            get {
-                return ((string)(this["OSIP"]));
-            }
-            set {
-                this["OSIP"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("USERID")]
-        public string NetCardUser {
-            get {
-                return ((string)(this["NetCardUser"]));
-            }
-            set {
-                this["NetCardUser"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PASSW0RD")]
-        public string NetCardPass {
-            get {
-                return ((string)(this["NetCardPass"]));
-            }
-            set {
-                this["NetCardPass"] = value;
+                this["IP"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("domowy")]
-        public string OSUser {
+        public string Username {
             get {
-                return ((string)(this["OSUser"]));
+                return ((string)(this["Username"]));
             }
             set {
-                this["OSUser"] = value;
+                this["Username"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("qaz")]
-        public string OSPass {
+        public string Password {
             get {
-                return ((string)(this["OSPass"]));
+                return ((string)(this["Password"]));
             }
             set {
-                this["OSPass"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("power on")]
-        public string StartCmd {
-            get {
-                return ((string)(this["StartCmd"]));
-            }
-            set {
-                this["StartCmd"] = value;
+                this["Password"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("shutdown -s -t 0")]
-        public string ShutDwnCmd {
+        public string ShutdownCMD {
             get {
-                return ((string)(this["ShutDwnCmd"]));
+                return ((string)(this["ShutdownCMD"]));
             }
             set {
-                this["ShutDwnCmd"] = value;
+                this["ShutdownCMD"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("60-32-B1-D8-C7-A0")]
+        public string MAC {
+            get {
+                return ((string)(this["MAC"]));
+            }
+            set {
+                this["MAC"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("192.168.0.255")]
+        public string BroadcastIP {
+            get {
+                return ((string)(this["BroadcastIP"]));
+            }
+            set {
+                this["BroadcastIP"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("9")]
+        public string Port {
+            get {
+                return ((string)(this["Port"]));
+            }
+            set {
+                this["Port"] = value;
             }
         }
     }
