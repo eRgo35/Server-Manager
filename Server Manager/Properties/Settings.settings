@@ -3,19 +3,19 @@
   <Profiles />
   <Settings>
     <Setting Name="IP" Type="System.String" Scope="User">
-      <Value Profile="(Default)">192.168.0.250</Value>
+      <Value Profile="(Default)">192.168.0.1</Value>
     </Setting>
     <Setting Name="Username" Type="System.String" Scope="User">
-      <Value Profile="(Default)">domowy</Value>
+      <Value Profile="(Default)">admin</Value>
     </Setting>
     <Setting Name="Password" Type="System.String" Scope="User">
-      <Value Profile="(Default)">qaz</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ShutdownCMD" Type="System.String" Scope="User">
-      <Value Profile="(Default)">shutdown -s -t 0</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="MAC" Type="System.String" Scope="User">
-      <Value Profile="(Default)">60-32-B1-D8-C7-A0</Value>
+      <Value Profile="(Default)">00-00-00-00-00-00</Value>
     </Setting>
     <Setting Name="BroadcastIP" Type="System.String" Scope="User">
       <Value Profile="(Default)">192.168.0.255</Value>

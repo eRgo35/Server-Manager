@@ -48,7 +48,7 @@ namespace Server_Manager
 
         private void Main_Load(object sender, EventArgs e)
         {
-            Auto_Ping.Start();
+            // Auto_Ping.Start();
 
             Thread pingTest = new Thread(() =>
             {
@@ -141,8 +141,6 @@ namespace Server_Manager
             int Port = int.Parse(Properties.Settings.Default.Port);
             string Str_Port = Port.ToString("X");
             int Hex_Port = int.Parse(Str_Port , NumberStyles.HexNumber);
-
-            MessageBox.Show(Hex_IP.ToString());
 
             WOLClass client = new WOLClass();
             client.Connect(new IPAddress(Hex_IP), Hex_Port);

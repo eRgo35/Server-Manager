@@ -98,7 +98,7 @@ namespace Server_Manager
 
         private void Button2_Click_1(object sender, EventArgs e)
         {
-            MessageBox.Show("Created by Michał Czyż\n\nCopyright(c) 2021 All Rights Reserved\n\nVersion: 1.0.0", "About Server Manager", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Created by Michał Czyż\n\nCopyright(c) 2021 CC-BY-SA\n\nVersion: 1.0.0", "About Server Manager", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void checkBox5_CheckedChanged(object sender, EventArgs e)

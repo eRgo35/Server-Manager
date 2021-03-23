@@ -25,7 +25,7 @@ namespace Server_Manager.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("192.168.0.250")]
+        [global::System.Configuration.DefaultSettingValueAttribute("192.168.0.1")]
         public string IP {
             get {
                 return ((string)(this["IP"]));
@@ -37,7 +37,7 @@ namespace Server_Manager.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("domowy")]
+        [global::System.Configuration.DefaultSettingValueAttribute("admin")]
         public string Username {
             get {
                 return ((string)(this["Username"]));
@@ -49,7 +49,7 @@ namespace Server_Manager.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("qaz")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string Password {
             get {
                 return ((string)(this["Password"]));
@@ -61,7 +61,7 @@ namespace Server_Manager.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("shutdown -s -t 0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string ShutdownCMD {
             get {
                 return ((string)(this["ShutdownCMD"]));
@@ -73,7 +73,7 @@ namespace Server_Manager.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("60-32-B1-D8-C7-A0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("00-00-00-00-00-00")]
         public string MAC {
             get {
                 return ((string)(this["MAC"]));

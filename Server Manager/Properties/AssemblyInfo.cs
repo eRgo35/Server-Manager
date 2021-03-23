@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Server Power Manager")]
-[assembly: AssemblyDescription("Turn on or Turn off your Server in LAN")]
+[assembly: AssemblyTitle("Server Manager")]
+[assembly: AssemblyDescription("Manage your server")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Michał Czyż")]
-[assembly: AssemblyProduct("Server Power Manager")]
-[assembly: AssemblyCopyright("Copyright ©  2019")]
+[assembly: AssemblyProduct("Server Manager")]
+[assembly: AssemblyCopyright("Copyright(c) 2021 CC-BY-SA")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
