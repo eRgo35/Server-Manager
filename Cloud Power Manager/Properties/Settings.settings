@@ -1,0 +1,24 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Cloud_Power_Manager.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="NetCardIP" Type="System.String" Scope="User">
+      <Value Profile="(Default)">192.168.0.200</Value>
+    </Setting>
+    <Setting Name="OSIP" Type="System.String" Scope="User">
+      <Value Profile="(Default)">192.168.0.17</Value>
+    </Setting>
+    <Setting Name="NetCardUser" Type="System.String" Scope="User">
+      <Value Profile="(Default)">USERID</Value>
+    </Setting>
+    <Setting Name="NetCardPass" Type="System.String" Scope="User">
+      <Value Profile="(Default)">PASSW0RD</Value>
+    </Setting>
+    <Setting Name="OSUser" Type="System.String" Scope="User">
+      <Value Profile="(Default)">domowy</Value>
+    </Setting>
+    <Setting Name="OSPass" Type="System.String" Scope="User">
+      <Value Profile="(Default)">qaz</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<asmv1:assembly xsi:schemaLocation="urn:schemas-microsoft-com:asm.v1 assembly.adaptive.xsd" manifestVersion="1.0" xmlns:asmv1="urn:schemas-microsoft-com:asm.v1" xmlns="urn:schemas-microsoft-com:asm.v2" xmlns:asmv2="urn:schemas-microsoft-com:asm.v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:co.v1="urn:schemas-microsoft-com:clickonce.v1" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xmlns:co.v2="urn:schemas-microsoft-com:clickonce.v2">
+  <asmv1:assemblyIdentity name="Server Power Manager.exe" version="1.0.0.5" publicKeyToken="a3d1e785e0b2f9d4" language="neutral" processorArchitecture="msil" type="win32" />
+  <description asmv2:iconFile="if_network-workgroup_118928.ico" xmlns="urn:schemas-microsoft-com:asm.v1" />
+  <application />
+  <entryPoint>
+    <assemblyIdentity name="Server Power Manager" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
+    <commandLine file="Server Power Manager.exe" parameters="" />
+  </entryPoint>
+  <trustInfo>
+    <security>
+      <applicationRequestMinimum>
+        <PermissionSet Unrestricted="true" ID="Custom" SameSite="site" />
+        <defaultAssemblyRequest permissionSetReference="Custom" />
+      </applicationRequestMinimum>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <!--
+          UAC Manifest Options
+          If you want to change the Windows User Account Control level replace the
+          requestedExecutionLevel node with one of the following.
+
+        <requestedExecutionLevel  level="asInvoker" uiAccess="false" />
+        <requestedExecutionLevel  level="requireAdministrator" uiAccess="false" />
+        <requestedExecutionLevel  level="highestAvailable" uiAccess="false" />
+
+         If you want to utilize File and Registry Virtualization for backward
+         compatibility then delete the requestedExecutionLevel node.
+    -->
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+  <dependency>
+    <dependentOS>
+      <osVersionInfo>
+        <os majorVersion="5" minorVersion="1" buildNumber="2600" servicePackMajor="0" />
+      </osVersionInfo>
+    </dependentOS>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="preRequisite" allowDelayedBinding="true">
+      <assemblyIdentity name="Microsoft.Windows.CommonLanguageRuntime" version="4.0.30319.0" />
+    </dependentAssembly>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="Renci.SshNet.dll" size="422912">
+      <assemblyIdentity name="Renci.SshNet" version="2016.1.0.0" publicKeyToken="1CEE9F8BDE3DB106" language="neutral" processorArchitecture="msil" />
+      <hash>
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+        <dsig:DigestValue>9jFe0UZDj3cCAzaBBD+P6WkO05oqvJoZIkZCSUSjono=</dsig:DigestValue>
+      </hash>
+    </dependentAssembly>
+  </dependency>
+  <dependency>
+    <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="Server Power Manager.exe" size="249264">
+      <assemblyIdentity name="Server Power Manager" version="1.0.0.0" language="neutral" processorArchitecture="msil" />
+      <hash>
+        <dsig:Transforms>
+          <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+        </dsig:Transforms>
+        <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+        <dsig:DigestValue>7Z0l7DgRGXrBwMpEm7nDi7VqBbG3YPZFBY/7euvbboU=</dsig:DigestValue>
+      </hash>
+    </dependentAssembly>
+  </dependency>
+  <file name="if_network-workgroup_118928.ico" size="113146">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+      <dsig:DigestValue>V/ZKtqIDEE8t8P4wKM1DPs7JWCtZhKCfHS4Gq1ltZJc=</dsig:DigestValue>
+    </hash>
+  </file>
+  <file name="Server Power Manager.exe.config" size="1581">
+    <hash>
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
+      <dsig:DigestValue>XW3ikx2MeBMrPh3VnHkYE2fyGPuJZfIr4WmwH82vihQ=</dsig:DigestValue>
+    </hash>
+  </file>
+<publisherIdentity name="CN=MIKE-PC\micha" issuerKeyHash="bcb731430c93927155f5aff4eac8ba466c6bc90d" /><Signature Id="StrongNameSignature" xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha256" /><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" /><DigestValue>N0dSqQ5w4nco7YT43bJ2xI87MoYRy5v2C4kVX0dwv28=</DigestValue></Reference></SignedInfo><SignatureValue>Mgh8bt3UDp53XbBmZ1w4wvbA6Ejxa3nt8hCUEDt5986+cB0dRLO7yqRQfn0YnnGwpwScJZfLGOy7krW4lNhEaXEL/N4/0ihYMi+ayec9m8S2oBW5ddTSzzYZYnfxP6WHpgxe0hiIX1XernCSYI+rCLQ5DA8ocVXetfrM51cnESk=</SignatureValue><KeyInfo Id="StrongNameKeyInfo"><KeyValue><RSAKeyValue><Modulus>w32NM1bPgwZ4UVAU950iTYWb1ovlSVPVKXdX2W/B1jEB1Fcah7Y05PjoAJcU0q9G2dKc4sYhVmaFsp12BA8zFgsZ8AwVVIbGwIp1JP64er08trn+neaiT9Cx43LLB9k6vlseGuHb0ermmFfqgI1slh0XlykLbAZ4wLwPUMewWjU=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><msrel:RelData xmlns:msrel="http://schemas.microsoft.com/windows/rel/2005/reldata"><r:license xmlns:r="urn:mpeg:mpeg21:2003:01-REL-R-NS" xmlns:as="http://schemas.microsoft.com/windows/pki/2005/Authenticode"><r:grant><as:ManifestInformation Hash="6fbf70475f15890bf69bcb1186323b8fc476b2ddf884ed2877e2700ea9524737" Description="" Url=""><as:assemblyIdentity name="Server Power Manager.exe" version="1.0.0.5" publicKeyToken="a3d1e785e0b2f9d4" language="neutral" processorArchitecture="msil" type="win32" /></as:ManifestInformation><as:SignedBy /><as:AuthenticodePublisher><as:X509SubjectName>CN=MIKE-PC\micha</as:X509SubjectName></as:AuthenticodePublisher></r:grant><r:issuer><Signature Id="AuthenticodeSignature" xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha256" /><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" /><Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#" /></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" /><DigestValue>EDS1G2ukir0ZGnEs+TqRux+ktsdcPySQDJd0Dir1/g0=</DigestValue></Reference></SignedInfo><SignatureValue>SNSvfMJvHyP9nPEGXWg8fUBzd6Hv3Q41HMNAc7FEBhJmqrv5So9U+w/QWUaz5wp7/Pp0tKM/FQybIGq7TrqXzmmfCSXIOqBlQ6tJNUO3rVu1FWTHzlbpDIQEIWlSl+Z5gf4v8B5iIkvDrtokticPVBM3xCPxSUC+3dkXXDxC52s=</SignatureValue><KeyInfo><KeyValue><RSAKeyValue><Modulus>w32NM1bPgwZ4UVAU950iTYWb1ovlSVPVKXdX2W/B1jEB1Fcah7Y05PjoAJcU0q9G2dKc4sYhVmaFsp12BA8zFgsZ8AwVVIbGwIp1JP64er08trn+neaiT9Cx43LLB9k6vlseGuHb0ermmFfqgI1slh0XlykLbAZ4wLwPUMewWjU=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue></KeyValue><X509Data><X509Certificate>MIIBzTCCATagAwIBAgIQNHo10yPEbZFBkXBi72WnRDANBgkqhkiG9w0BAQsFADAlMSMwIQYDVQQDHhoATQBJAEsARQAtAFAAQwBcAG0AaQBjAGgAYTAeFw0xOTA3MDkxNTM2MTFaFw0yMDA3MDgyMTM2MTFaMCUxIzAhBgNVBAMeGgBNAEkASwBFAC0AUABDAFwAbQBpAGMAaABhMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDDfY0zVs+DBnhRUBT3nSJNhZvWi+VJU9Upd1fZb8HWMQHUVxqHtjTk+OgAlxTSr0bZ0pzixiFWZoWynXYEDzMWCxnwDBVUhsbAinUk/rh6vTy2uf6d5qJP0LHjcssH2Tq+Wx4a4dvR6uaYV+qAjWyWHReXKQtsBnjAvA9Qx7BaNQIDAQABMA0GCSqGSIb3DQEBCwUAA4GBAEeHImB6ir7vJTa8B0e/1MxI3hRn6WWDmMVq3L9nJ956pfz9aGDDtbJHXFnsaGHInkLH8B1OuHAXZpN3MInhJsMrNJ5qjbTomnP+h96EOugND6ebJZSWH1HtG5KBwElWG6UDkne/OyU+msc6OKHECbzmDTOShf1Iky54SFTZmldX</X509Certificate></X509Data></KeyInfo></Signature></r:issuer></r:license></msrel:RelData></KeyInfo></Signature></asmv1:assembly>

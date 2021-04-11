@@ -1,0 +1,18 @@
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Cloud Power Manager.csprojAssemblyReference.cache
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Cloud_Power_Manager.Properties.Resources.resources
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Cloud Power Manager.csproj.GenerateResource.cache
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Cloud Power Manager.csproj.CoreCompileInputs.cache
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Cloud_Power_Manager.Main.resources
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Cloud_Power_Manager.Settings.resources
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\bin\Debug\Server Power Manager.exe.config
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\bin\Debug\Server Power Manager.exe.manifest
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\bin\Debug\Server Power Manager.application
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\bin\Debug\Server Power Manager.exe
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\bin\Debug\Server Power Manager.pdb
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Server Power Manager.exe.manifest
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Server Power Manager.application
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Server Power Manager.exe
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Server Power Manager.pdb
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\bin\Debug\Renci.SshNet.dll
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\bin\Debug\Renci.SshNet.xml
+C:\Users\micha\source\repos\Cloud Power Manager\Cloud Power Manager\obj\Debug\Cloud Power Manager.csproj.CopyComplete
