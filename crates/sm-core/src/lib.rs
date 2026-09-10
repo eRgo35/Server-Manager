@@ -3,3 +3,5 @@ pub mod model;
 pub use model::*;
 pub mod config;
 pub use config::*;
+pub mod migrate;
+pub use migrate::*;
