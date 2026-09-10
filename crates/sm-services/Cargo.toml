@@ -7,3 +7,6 @@ license.workspace = true
 [dependencies]
 sm-core = { path = "../sm-core" }
 thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
