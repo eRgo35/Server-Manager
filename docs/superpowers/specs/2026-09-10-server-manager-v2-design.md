@@ -91,11 +91,18 @@ server-manager/
 ```
 
 **Data flow:** frontend calls Rust via Tauri `invoke` commands
-(`wake`, `shutdown`, `reboot`, `open_files`, `map_drive`,
-`get_config`, `save_config`, …). Long-running things (status polling,
-stats sampling) run in tokio tasks in the backend and push results to
-the frontend as Tauri **events**; the UI is a pure render of the last
-event received. No business logic in JS.
+(`wake`, `power`, `open_files`, `map_drive`, `get_state`,
+`save_settings`, `upsert_machine`, …). Long-running things (status
+polling, stats sampling) run in tokio tasks in the backend and push
+results to the frontend as Tauri **events** (`status://update`,
+`stats://update`); the UI is a pure render of the last event received.
+No business logic in JS.
+
+Where a command needs something from the user mid-flight, it returns a
+**structured error code** the frontend recognises rather than a prose
+string: `HOSTKEY_UNTRUSTED`, `HOSTKEY_CHANGED`,
+`SECRET_REQUIRED:<kind>`. The frontend shows the matching prompt
+(trust dialog / password field) and retries.
 
 ---
 
@@ -136,6 +143,7 @@ broadcast_addr = "255.255.255.255"  # optional, this is the default
 os_host       = "192.168.1.10"   # ip or hostname
 ssh_port      = 22
 ssh_user      = "mike"
+key_path      = "~/.ssh/id_ed25519" # optional; else agent / autodiscovery / password
 secret_mode   = "keyring"         # optional, overrides settings default
 shutdown_cmd  = "shutdown -h now" # optional override (default shown)
 reboot_cmd    = "shutdown -r now" # optional override (default shown)
@@ -247,15 +255,20 @@ Metrics: **CPU %, memory, disk, uptime.**
 
 Gathering: **one batched SSH exec** per sample, parsed in `infra`.
 Read `/proc` directly in a single command — no assumptions about which
-userland tools exist:
+userland tools exist. Sections are delimited by `---SM-*` sentinel
+lines so the parser is unambiguous:
 
 ```
-cat /proc/uptime /proc/meminfo; df -B1 /; cat /proc/stat; sleep 0.2; cat /proc/stat
+echo '---SM-UPTIME'; cat /proc/uptime;
+echo '---SM-MEM';    cat /proc/meminfo;
+echo '---SM-DISK';   df -B1 --output=size,used / | tail -1;
+echo '---SM-CPU1';   head -1 /proc/stat;
+sleep 0.2;
+echo '---SM-CPU2';   head -1 /proc/stat
 ```
 
-(two `/proc/stat` reads 200 ms apart for a CPU delta). `df` is in
-coreutils on every Linux; if it proves fragile we fall back to reading
-`/proc/mounts` + `statvfs`-style parsing.
+(two `/proc/stat` reads 200 ms apart for a CPU delta). The exact string
+lives in code as `sm_core::stats::PROC_STATS_CMD`.
 
 Non-Linux machines: stats are shown as "unavailable" unless
 `stats_cmd` is set and returns a documented `key=value` format.
