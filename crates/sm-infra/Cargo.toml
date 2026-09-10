@@ -9,3 +9,6 @@ sm-core = { path = "../sm-core" }
 sm-services = { path = "../sm-services" }
 tokio = { workspace = true }
 tracing = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
