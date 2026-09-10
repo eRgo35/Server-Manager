@@ -7,3 +7,5 @@ pub mod migrate;
 pub use migrate::*;
 pub mod backoff;
 pub use backoff::*;
+pub mod wol;
+pub use wol::*;
