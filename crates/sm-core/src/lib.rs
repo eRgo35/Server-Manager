@@ -11,3 +11,5 @@ pub mod wol;
 pub use wol::*;
 pub mod stats;
 pub use stats::*;
+pub mod power;
+pub use power::*;
