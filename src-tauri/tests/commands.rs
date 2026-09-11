@@ -140,3 +140,30 @@ fn upsert_then_get_machine_blanks_secrets() {
     let text = std::fs::read_to_string(dir.path().join("config.toml")).unwrap();
     assert!(text.contains("nas"));
 }
+
+#[test]
+fn delete_active_machine_clears_active() {
+    let dir = tempfile::tempdir().unwrap();
+    let app = app(dir.path());
+    let w = window(&app);
+
+    ipc(
+        &w,
+        "upsert_machine",
+        json!({ "machine": serde_json::to_value(test_machine()).unwrap() }),
+    )
+    .expect("upsert_machine ok");
+    ipc(&w, "set_active", json!({ "id": "nas" })).expect("set_active ok");
+
+    let st = ipc(&w, "get_state", json!({})).expect("get_state ok");
+    assert_eq!(st["active"], json!("nas"));
+
+    ipc(&w, "delete_machine", json!({ "id": "nas" })).expect("delete ok");
+
+    let st = ipc(&w, "get_state", json!({})).expect("get_state ok");
+    assert_eq!(
+        st["active"],
+        json!(null),
+        "deleted machine must not stay active"
+    );
+}

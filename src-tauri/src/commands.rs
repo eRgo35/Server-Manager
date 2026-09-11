@@ -166,6 +166,13 @@ pub async fn delete_machine_inner(state: &AppState, id: String) -> Result<(), St
         return Err(format!("unknown machine id: {id}"));
     }
     commit(state, cfg)?;
+    // The poller keys off the active machine; a deleted machine must not
+    // keep being polled (and set_active can't be re-fired by the UI for an
+    // id that no longer exists).
+    if state.active.read().unwrap().as_ref() == Some(&mid) {
+        *state.active.write().unwrap() = None;
+        state.notify.notify_one();
+    }
     for kind in [
         SecretKind::SshPassword,
         SecretKind::KeyPassphrase,
