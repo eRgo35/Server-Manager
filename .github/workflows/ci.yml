@@ -21,11 +21,11 @@ jobs:
   lint-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v6.0.2
       - uses: dtolnay/rust-toolchain@1.98
         with:
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@988648c00164cd0e1a3ba0ada5f37a682d52f183 # v2
+      - uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2.8.0
 
       - name: Install system deps (tauri)
         run: |
@@ -51,9 +51,9 @@ jobs:
     needs: lint-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v6.0.2
       - uses: dtolnay/rust-toolchain@1.98
-      - uses: Swatinem/rust-cache@988648c00164cd0e1a3ba0ada5f37a682d52f183 # v2
+      - uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2.8.0
 
       - name: Start sshd
         run: docker compose -f tests/integration/docker-compose.yml up -d --wait
@@ -79,9 +79,9 @@ jobs:
     needs: lint-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v6.0.2
       - uses: dtolnay/rust-toolchain@1.98
-      - uses: Swatinem/rust-cache@988648c00164cd0e1a3ba0ada5f37a682d52f183 # v2
+      - uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2.8.0
 
       - name: Install tauri-cli + system deps
         run: |
@@ -92,7 +92,7 @@ jobs:
         run: just build-linux
 
       - name: Upload artifacts to release
-        uses: softprops/action-gh-release@6cbd405e2c4e67de7ce52b5a96e30d76672e8a55 # v2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v2.3.4
         with:
           files: |
             target/release/bundle/appimage/*.AppImage
