@@ -1,0 +1,10 @@
+services:
+  sshd:
+    image: lscr.io/linuxserver/openssh-server:latest
+    environment:
+      - USER_NAME=tester
+      - USER_PASSWORD=testpass
+      - PASSWORD_ACCESS=true
+      - SUDO_ACCESS=true
+    ports:
+      - "2222:2222"
