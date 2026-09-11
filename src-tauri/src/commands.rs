@@ -45,7 +45,7 @@ pub struct AppSnapshot {
 // ---------- helpers ----------
 
 /// Maps a `ServiceError` to the structured error-string contract.
-fn err_string(e: ServiceError) -> String {
+pub(crate) fn err_string(e: ServiceError) -> String {
     match e {
         ServiceError::HostKeyUntrusted => "HOSTKEY_UNTRUSTED".into(),
         ServiceError::HostKeyChanged(_) => "HOSTKEY_CHANGED".into(),
@@ -135,6 +135,10 @@ pub async fn get_state_inner(state: &AppState) -> Result<AppSnapshot, String> {
 pub async fn set_active_inner(state: &AppState, id: String) -> Result<(), String> {
     find_machine(state, &id)?;
     *state.active.write().unwrap() = Some(MachineId(id));
+    // The poller's backoff belongs to the previously active machine; the
+    // newly selected one starts fresh and is polled immediately.
+    state.backoff.write().unwrap().on_success();
+    state.notify.notify_one();
     Ok(())
 }
 
@@ -188,14 +192,17 @@ pub async fn wake_inner(state: &AppState, id: String) -> Result<(), String> {
     state.waker.wake(mac, broadcast).await.map_err(err_string)
 }
 
-/// One immediate reachability probe. T19 (poller): must also reset the
-/// machine's poller backoff; the poller does not exist yet.
+/// One immediate reachability probe; resets the poller backoff (manual
+/// refresh bypasses it, spec §6.2) and wakes the poller for a fresh tick.
 pub async fn refresh_now_inner(state: &AppState, id: String) -> Result<bool, String> {
     let machine = find_machine(state, &id)?;
-    Ok(state
+    let up = state
         .probe
         .is_up(&machine.os_host, machine.ssh_port, PROBE_TIMEOUT)
-        .await)
+        .await;
+    state.backoff.write().unwrap().on_success();
+    state.notify.notify_one();
+    Ok(up)
 }
 
 pub async fn power_inner(state: &AppState, id: String, action: String) -> Result<(), String> {

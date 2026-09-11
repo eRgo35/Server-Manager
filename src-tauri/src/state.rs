@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
-use sm_core::{Config, LoadOutcome, MachineId};
+use sm_core::{BackoffState, Config, LoadOutcome, MachineId};
 use sm_infra::files::LinuxFileOpener;
 use sm_infra::probe::TcpStatusProbe;
 use sm_infra::wol::UdpWaker;
@@ -46,6 +46,11 @@ pub struct AppState {
     pub opener: LinuxFileOpener,
     pub runner: Arc<RusshRunner<InMemorySecretStore, FileHostKeyStore>>,
     pub stats: Arc<SshStatsProbe<RusshRunner<InMemorySecretStore, FileHostKeyStore>>>,
+    /// Signals the background poller (Task 19) to re-poll immediately.
+    pub notify: Arc<tokio::sync::Notify>,
+    /// Backoff of the active machine's poll loop; reset on
+    /// `set_active`/`refresh_now`, ramped by consecutive offline polls.
+    pub backoff: RwLock<BackoffState>,
 }
 
 impl AppState {
@@ -63,7 +68,10 @@ impl AppState {
             cfg.settings.default_secret_mode,
         ));
         let stats = Arc::new(SshStatsProbe::new(runner.clone()));
+        let poll_base = cfg.settings.poll_base_secs.max(1);
         AppState {
+            notify: Arc::new(tokio::sync::Notify::new()),
+            backoff: RwLock::new(BackoffState::new(poll_base)),
             cfg: RwLock::new(cfg),
             secrets_prompt,
             paths,
