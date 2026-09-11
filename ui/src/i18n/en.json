@@ -1,13 +1,11 @@
 {
   "status.online": "ONLINE",
   "status.offline": "OFFLINE",
-
   "action.wake": "Wake",
   "action.shutdown": "Shutdown",
   "action.reboot": "Reboot",
   "action.openFiles": "Open Files",
   "action.mapDrive": "Map Drive",
-
   "settings.title": "Settings",
   "settings.language": "Language",
   "settings.theme": "Theme",
@@ -25,7 +23,6 @@
   "settings.statsGraph": "Graph",
   "settings.secretPlaintext": "Plaintext (config)",
   "settings.secretPrompt": "Prompt (session only)",
-
   "machine.id": "ID",
   "machine.name": "Name",
   "machine.mac": "MAC",
@@ -53,7 +50,6 @@
   "machine.deleteConfirm": "Delete machine \"{name}\"? Its stored secrets are removed too.",
   "machine.saved": "Machine \"{name}\" saved",
   "machine.deleted": "Machine \"{name}\" deleted",
-
   "toast.shareCopied": "Share path copied",
   "toast.migrated": "Settings migrated",
   "toast.settingsSaved": "Settings saved",
@@ -68,26 +64,23 @@
   "toast.cancelledHostKey": "Action cancelled — host key not trusted.",
   "toast.cancelledSecret": "Action cancelled — no secret provided.",
   "toast.toggleSettings": "Toggle settings",
-
   "hostkey.prompt": "This server's SSH host key is not trusted yet. Trust it and continue?",
   "hostkey.changed": "This server's SSH host key has CHANGED since it was last trusted. This can indicate a man-in-the-middle attack. Trust the new key and continue?",
-
   "secret.required": "Enter the {kind} for this machine:",
   "secret.SshPassword": "SSH password",
   "secret.KeyPassphrase": "key passphrase",
   "secret.SudoPassword": "sudo password",
-
   "stats.unavailable": "unavailable",
   "stats.cpu": "CPU",
   "stats.mem": "Mem",
   "stats.disk": "Disk",
   "stats.uptime": "Up",
-
   "error.network": "Network error",
   "error.auth": "Authentication failed",
   "error.hostKeyChanged": "SSH host key changed",
   "error.hostKeyUntrusted": "SSH host key not trusted",
   "error.timeout": "Connection timed out",
   "error.remote": "Remote command failed",
-  "error.other": "Unexpected error"
+  "error.other": "Unexpected error",
+  "hostkey.fingerprint": "Key fingerprint: {fp}"
 }

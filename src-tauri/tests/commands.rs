@@ -24,7 +24,7 @@ fn paths(dir: &std::path::Path) -> Paths {
 }
 
 fn app(dir: &std::path::Path) -> MockApp {
-    let state = std::sync::Arc::new(AppState::new(paths(dir), Config::default(), None));
+    let state = std::sync::Arc::new(AppState::new(paths(dir), Config::default(), None, None));
     let app = mock_builder()
         .invoke_handler(tauri::generate_handler![
             commands::get_state,
@@ -35,7 +35,7 @@ fn app(dir: &std::path::Path) -> MockApp {
             commands::save_settings,
             commands::wake,
             commands::refresh_now,
-            commands::power,
+            commands::pending_host_key,
             commands::trust_host,
             commands::provide_secret,
             commands::open_files,

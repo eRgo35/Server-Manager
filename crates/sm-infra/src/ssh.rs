@@ -4,7 +4,8 @@
 //! concerns; non-zero remote exit codes are passed through as data (the
 //! service layer decides what to do with them).
 
-use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::Duration;
 
 use russh::keys::{HashAlg, PrivateKeyWithHashAlg};
@@ -26,10 +27,12 @@ pub(crate) enum AuthStep {
     Password,
 }
 
-/// Effective secret mode: machine override or app default. The `Keyring` →
-/// `Prompt` mapping (user decision 2026-09-11) happens in [`auth_plan`].
-fn effective_mode(machine: &Machine, default_mode: SecretMode) -> SecretMode {
-    machine.secret_mode.unwrap_or(default_mode)
+/// Effective secret mode: machine override or app default (shared
+/// `RwLock`, so `save_settings` changes apply without a restart). The
+/// `Keyring` → `Prompt` mapping (user decision 2026-09-11) happens in
+/// [`auth_plan`].
+fn effective_mode(machine: &Machine, default_mode: &RwLock<SecretMode>) -> SecretMode {
+    machine.secret_mode.unwrap_or(*default_mode.read().unwrap())
 }
 
 /// Pure auth-method selection.
@@ -162,14 +165,17 @@ impl<H: HostKeyStore> client::Handler for HostKeyHandler<H> {
         }
     }
 }
-
 /// TCP + SSH handshake to `host:port`, bounded by `connect_timeout`.
+///
+/// On failure the `CapturedKey` side-channel is folded into the error, but
+/// the fingerprint the server presented (if any) is returned alongside so
+/// callers can surface it in a trust prompt.
 async fn connect_session<H: HostKeyStore + 'static>(
     host: &str,
     port: u16,
     host_keys: Option<Arc<H>>,
     connect_timeout: Duration,
-) -> Result<(client::Handle<HostKeyHandler<H>>, Arc<CapturedKey>), ServiceError> {
+) -> Result<(client::Handle<HostKeyHandler<H>>, Arc<CapturedKey>), (ServiceError, Option<String>)> {
     let captured = Arc::new(CapturedKey::default());
     let handler = HostKeyHandler {
         host: host.to_owned(),
@@ -188,9 +194,10 @@ async fn connect_session<H: HostKeyStore + 'static>(
                 ConnectError::HostKey(e) => e,
                 ConnectError::Russh(e) => map_russh_error(&e),
             };
-            Err(captured.take_error().unwrap_or(mapped))
+            let fp = captured.take_fingerprint();
+            Err((captured.take_error().unwrap_or(mapped), fp))
         }
-        Err(_) => Err(ServiceError::Timeout),
+        Err(_) => Err((ServiceError::Timeout, None)),
     }
 }
 
@@ -311,26 +318,50 @@ async fn exec(
 pub struct RusshRunner<S: SecretStore, H: HostKeyStore> {
     secrets: Arc<S>,
     host_keys: Arc<H>,
-    default_secret_mode: SecretMode,
+    /// Default mode for machines with no per-machine `secret_mode`; shared
+    /// with the tauri shell so `save_settings` takes effect immediately
+    /// (a captured value would need a restart).
+    default_secret_mode: Arc<RwLock<SecretMode>>,
     connect_timeout: Duration,
+    /// Fingerprint from the most recent failed handshake against a host,
+    /// keyed by `host:port`. `run` records it when the host-key check
+    /// rejects; `pending_host_key` exposes it to the UI so the trust
+    /// modal can show what the user is agreeing to.
+    pending_fp: Mutex<HashMap<String, String>>,
 }
 
 impl<S: SecretStore, H: HostKeyStore + 'static> RusshRunner<S, H> {
-    pub fn new(secrets: Arc<S>, host_keys: Arc<H>, default_secret_mode: SecretMode) -> Self {
+    pub fn new(
+        secrets: Arc<S>,
+        host_keys: Arc<H>,
+        default_secret_mode: Arc<RwLock<SecretMode>>,
+    ) -> Self {
         Self {
             secrets,
             host_keys,
             default_secret_mode,
             connect_timeout: DEFAULT_CONNECT_TIMEOUT,
+            pending_fp: Mutex::new(HashMap::new()),
         }
+    }
+
+    /// The fingerprint the server presented on the most recent rejected
+    /// handshake to `host:port`, or `None` when nothing was captured.
+    pub fn pending_host_key(&self, host: &str, port: u16) -> Option<String> {
+        self.pending_fp
+            .lock()
+            .unwrap()
+            .get(&format!("{host}:{port}"))
+            .cloned()
     }
 
     /// Handshake while accepting whatever key the server presents, then
     /// record its fingerprint in the trust store (the "trust this host"
     /// action after a `HostKeyUntrusted` result).
     pub async fn trust_pending(&self, host: &str, port: u16) -> Result<(), ServiceError> {
-        let (session, captured) =
-            connect_session::<H>(host, port, None, self.connect_timeout).await?;
+        let (session, captured) = connect_session::<H>(host, port, None, self.connect_timeout)
+            .await
+            .map_err(|(e, _)| e)?;
         drop(session);
         let fp = captured
             .take_fingerprint()
@@ -341,18 +372,42 @@ impl<S: SecretStore, H: HostKeyStore + 'static> RusshRunner<S, H> {
 
 impl<S: SecretStore, H: HostKeyStore + 'static> SshRunner for RusshRunner<S, H> {
     async fn run(&self, machine: &Machine, command: &str) -> Result<CommandOutput, ServiceError> {
+        let mode = effective_mode(machine, &self.default_secret_mode);
+        let plan = auth_plan(machine, mode, true);
+        let key = format!("{}:{}", machine.os_host, machine.ssh_port);
+        match connect_session(
+            &machine.os_host,
+            machine.ssh_port,
+            Some(self.host_keys.clone()),
+            self.connect_timeout,
+        )
+        .await
         {
-            let mode = effective_mode(machine, self.default_secret_mode);
-            let plan = auth_plan(machine, mode, true);
-            let (mut session, _captured) = connect_session(
-                &machine.os_host,
-                machine.ssh_port,
-                Some(self.host_keys.clone()),
-                self.connect_timeout,
-            )
-            .await?;
-            authenticate(&mut session, machine, &plan, &*self.secrets).await?;
-            exec(&mut session, command).await
+            Ok((mut session, _captured)) => {
+                self.pending_fp.lock().unwrap().remove(&key);
+                authenticate(&mut session, machine, &plan, &*self.secrets).await?;
+                exec(&mut session, command).await
+            }
+            Err((e, fp)) => {
+                // Host-key rejection is the trust-prompt path: cache the
+                // presented fingerprint (if any) so `pending_host_key` can
+                // show it. Any other failure clears a stale entry.
+                let mut pending = self.pending_fp.lock().unwrap();
+                match fp {
+                    Some(fp)
+                        if matches!(
+                            e,
+                            ServiceError::HostKeyUntrusted | ServiceError::HostKeyChanged(_)
+                        ) =>
+                    {
+                        pending.insert(key, fp);
+                    }
+                    _ => {
+                        pending.remove(&key);
+                    }
+                }
+                Err(e)
+            }
         }
     }
 }
@@ -360,6 +415,7 @@ impl<S: SecretStore, H: HostKeyStore + 'static> SshRunner for RusshRunner<S, H> 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{FileHostKeyStore, InMemorySecretStore};
     use sm_core::MachineId;
 
     fn test_machine() -> Machine {
@@ -422,5 +478,42 @@ mod tests {
     fn keyring_resolves_as_prompt_for_password_fallback() {
         let plan = auth_plan(&test_machine(), SecretMode::Keyring, false);
         assert_eq!(plan, vec![AuthStep::Password]);
+    }
+    // A TCP server that closes immediately is not an SSH server: the
+    // handshake fails with a network error and no host key is presented,
+    // so no pending fingerprint is recorded (the stale-entry clear path).
+    #[tokio::test]
+    async fn non_ssh_host_leaves_no_pending_fingerprint() {
+        let l = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = l.local_addr().unwrap().port();
+        tokio::spawn(async move {
+            while let Ok((s, _)) = l.accept().await {
+                drop(s);
+            }
+        });
+        let secrets = Arc::new(InMemorySecretStore::default());
+        let dir = tempfile::tempdir().unwrap();
+        let hk = Arc::new(FileHostKeyStore::new(dir.path().join("known_hosts")));
+        let runner = RusshRunner::new(secrets, hk, default_mode(SecretMode::Prompt));
+        let mut m = test_machine();
+        m.os_host = "127.0.0.1".into();
+        m.ssh_port = port;
+        assert!(runner.run(&m, "echo hi").await.is_err());
+        assert_eq!(runner.pending_host_key("127.0.0.1", port), None);
+    }
+
+    #[test]
+    fn pending_host_key_starts_empty_and_is_scoped_by_host_port() {
+        let secrets = Arc::new(InMemorySecretStore::default());
+        let dir = tempfile::tempdir().unwrap();
+        let hk = Arc::new(FileHostKeyStore::new(dir.path().join("known_hosts")));
+        let runner = RusshRunner::new(secrets, hk, default_mode(SecretMode::Plaintext));
+        assert_eq!(runner.pending_host_key("h", 1), None);
+    }
+
+    /// Test helper: wraps a mode in the shared-lock shape `RusshRunner::new`
+    /// expects.
+    fn default_mode(mode: SecretMode) -> Arc<RwLock<SecretMode>> {
+        Arc::new(RwLock::new(mode))
     }
 }

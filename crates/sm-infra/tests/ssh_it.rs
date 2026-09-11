@@ -40,7 +40,11 @@ async fn runs_a_command_after_trusting_host() {
     let dir = tempfile::tempdir().unwrap();
     let hk = Arc::new(FileHostKeyStore::new(dir.path().join("known_hosts")));
     let secrets = Arc::new(InMemorySecretStore::default());
-    let runner = RusshRunner::new(secrets, hk, SecretMode::Plaintext);
+    let runner = RusshRunner::new(
+        secrets,
+        hk,
+        Arc::new(std::sync::RwLock::new(SecretMode::Plaintext)),
+    );
 
     // First contact: TOFU must reject the untrusted host key.
     let err = match runner.run(&machine(), "echo hi").await {
@@ -67,7 +71,7 @@ async fn samples_proc_stats() {
     let runner = Arc::new(RusshRunner::new(
         Arc::new(InMemorySecretStore::default()),
         hk,
-        SecretMode::Plaintext,
+        Arc::new(std::sync::RwLock::new(SecretMode::Plaintext)),
     ));
 
     runner.trust_pending("127.0.0.1", 2222).await.unwrap();

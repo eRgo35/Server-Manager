@@ -72,6 +72,7 @@ tpl.innerHTML = `
     }
     #modal-msg {
       word-break: break-word;
+      white-space: pre-line;
     }
     #secret-row {
       display: flex;

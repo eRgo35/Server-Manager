@@ -24,7 +24,7 @@ import {
   power,
   provideSecret,
   saveSettings,
-  setActive,
+  pendingHostKey,
   trustHost,
   upsertMachine,
   deleteMachine,
@@ -212,7 +212,15 @@ export class SmApp extends HTMLElement {
 
   /** Host-key prompt → trustHost → retry the same operation. */
   async #hostKeyFlow(name, id, changed, op) {
-    const ok = await this.$toast.confirm(t(changed ? "hostkey.changed" : "hostkey.prompt"), {
+    let msg = t(changed ? "hostkey.changed" : "hostkey.prompt");
+    // Show what the user is agreeing to, when the backend captured it.
+    try {
+      const fp = await pendingHostKey(id);
+      if (fp) msg += "\n\n" + t("hostkey.fingerprint", { fp });
+    } catch {
+      // Fingerprint is advisory; a failure here must not block the flow.
+    }
+    const ok = await this.$toast.confirm(msg, {
       kind: changed ? "danger" : "info",
     });
     if (!ok) {

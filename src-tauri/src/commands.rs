@@ -66,23 +66,26 @@ fn find_machine(state: &AppState, id: &str) -> Result<Machine, String> {
 fn effective_mode(state: &AppState, machine: &Machine) -> SecretMode {
     machine
         .secret_mode
-        .unwrap_or(state.cfg.read().unwrap().settings.default_secret_mode)
+        .unwrap_or(*state.default_secret_mode.read().unwrap())
 }
 
 /// The `SECRET_REQUIRED:SshPassword` check: password auth is planned only
 /// when the machine holds a plaintext password or the effective mode allows
 /// the store (prompt; keyring defers to prompt in M1). If neither has one,
-/// the UI must prompt before the SSH call is attempted.
+/// the UI must prompt before the SSH call is attempted — otherwise the
+/// auth would run with no password source and fail as a bare `auth failed`
+/// instead of surfacing the prompt.
 fn require_ssh_password(state: &AppState, machine: &Machine) -> Result<(), String> {
     if machine.key_path.is_some() || machine.ssh_password.is_some() {
         return Ok(());
     }
-    let mode = effective_mode(state, machine);
-    if matches!(mode, SecretMode::Keyring | SecretMode::Prompt)
-        && state
-            .secrets_prompt
-            .get(&machine.id, SecretKind::SshPassword)
-            .is_none()
+    // No password source anywhere: prompt regardless of mode. Keyring
+    // defers to prompt in M1, so the session store is the only source the
+    // auth step can consult; the UI prompt feeds it.
+    if state
+        .secrets_prompt
+        .get(&machine.id, SecretKind::SshPassword)
+        .is_none()
     {
         return Err("SECRET_REQUIRED:SshPassword".into());
     }
@@ -107,12 +110,16 @@ fn parse_secret_kind(s: &str) -> Option<SecretKind> {
 
 /// Validates then persists `cfg`, committing it to the shared state only on
 /// success (so a rejected upsert leaves the in-memory config untouched).
+/// Refused outright while `read_only_reason` is set (config.toml from a
+/// newer schema): the running defaults must not overwrite the user's file.
 fn commit(state: &AppState, cfg: Config) -> Result<(), String> {
+    if let Some(reason) = state.read_only_reason.read().unwrap().as_ref() {
+        return Err(format!("config is read-only: {reason}"));
+    }
     state::save_config(&state.paths, &cfg)?;
     *state.cfg.write().unwrap() = cfg;
     Ok(())
 }
-
 // ---------- command implementations ----------
 
 pub async fn get_state_inner(state: &AppState) -> Result<AppSnapshot, String> {
@@ -185,6 +192,7 @@ pub async fn delete_machine_inner(state: &AppState, id: String) -> Result<(), St
 
 pub async fn save_settings_inner(state: &AppState, settings: Settings) -> Result<(), String> {
     let mut cfg = state.cfg.read().unwrap().clone();
+    *state.default_secret_mode.write().unwrap() = settings.default_secret_mode;
     cfg.settings = settings;
     commit(state, cfg)
 }
@@ -255,6 +263,16 @@ pub async fn trust_host_inner(state: &AppState, id: String) -> Result<(), String
         .trust_pending(&machine.os_host, machine.ssh_port)
         .await
         .map_err(err_string)
+}
+
+/// The fingerprint the server presented on the most recent host-key
+/// rejection for this machine, or `None`. The UI shows it in the trust
+/// modal so the user knows what they are agreeing to.
+pub fn pending_host_key_inner(state: &AppState, id: String) -> Option<String> {
+    let machine = find_machine(state, &id).ok()?;
+    state
+        .runner
+        .pending_host_key(&machine.os_host, machine.ssh_port)
 }
 
 /// Always stores in the session store. With `remember`, plaintext mode
@@ -364,6 +382,11 @@ pub async fn power(
     action: String,
 ) -> Result<(), String> {
     power_inner(&state, id, action).await
+}
+
+#[tauri::command]
+pub fn pending_host_key(state: tauri::State<'_, Arc<AppState>>, id: String) -> Option<String> {
+    pending_host_key_inner(&state, id)
 }
 
 #[tauri::command]

@@ -27,10 +27,12 @@ run:
 
 # docker-backed SSH tests, opt-in (needs docker; never part of `just test`)
 test-integration:
-    docker compose -f tests/integration/docker-compose.yml up -d
-    @port_up=0; for i in $(seq 1 30); do if (exec 3<>/dev/tcp/127.0.0.1/2222) 2>/dev/null; then exec 3>&- 3<&-; port_up=1; break; fi; sleep 1; done; [ "$port_up" = 1 ] || { echo "sshd on 127.0.0.1:2222 did not come up"; exit 1; }
-    -cargo test --package sm-infra --test ssh_it -- --ignored --test-threads 1
-    docker compose -f tests/integration/docker-compose.yml down -v
+    docker compose -f tests/integration/docker-compose.yml up -d --wait
+    # Wait for the SSH banner, not just the TCP port: the port forwards
+    # before sshd is ready to speak SSH, so an early connect would ECONNRESET.
+    @for i in $(seq 1 60); do if ssh-keyscan -T 1 -p 2222 127.0.0.1 >/dev/null 2>&1; then break; fi; sleep 1; done
+    @[ -n "$(ssh-keyscan -T 1 -p 2222 127.0.0.1 2>/dev/null)" ] || { echo "sshd never spoke SSH on 127.0.0.1:2222"; docker compose -f tests/integration/docker-compose.yml down -v; exit 1; }
+    @set -e; trap 'docker compose -f tests/integration/docker-compose.yml down -v' EXIT; cargo test --package sm-infra --test ssh_it -- --ignored --test-threads 1
 
 # NO_STRIP: the linuxdeploy AppImage Tauri pins bundles binutils too old to
 # strip Fedora's .relr.dyn sections, which fails the whole AppImage bundling

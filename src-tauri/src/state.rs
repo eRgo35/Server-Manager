@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
-use sm_core::{BackoffState, Config, LoadOutcome, MachineId};
+use sm_core::{BackoffState, Config, LoadOutcome, MachineId, SecretMode};
 use sm_infra::files::LinuxFileOpener;
 use sm_infra::probe::TcpStatusProbe;
 use sm_infra::wol::UdpWaker;
@@ -46,6 +46,13 @@ pub struct AppState {
     pub opener: LinuxFileOpener,
     pub runner: Arc<RusshRunner<InMemorySecretStore, FileHostKeyStore>>,
     pub stats: Arc<SshStatsProbe<RusshRunner<InMemorySecretStore, FileHostKeyStore>>>,
+    /// Default secret mode for machines without an override; shared with the
+    /// runner so `save_settings` takes effect without a restart.
+    pub default_secret_mode: Arc<RwLock<SecretMode>>,
+    /// `true` when `config.toml` uses a schema newer than this build
+    /// supports (`TooNew`): the app runs on defaults and must not write
+    /// config (all mutating commands fail with this message).
+    pub read_only_reason: RwLock<Option<String>>,
     /// Signals the background poller (Task 19) to re-poll immediately.
     pub notify: Arc<tokio::sync::Notify>,
     /// Backoff of the active machine's poll loop; reset on
@@ -56,16 +63,21 @@ pub struct AppState {
 impl AppState {
     /// Wires the infra implementations: the TOFU store points at
     /// `paths.known_hosts`, and the runner/probe share the prompt secret store.
-    pub fn new(paths: Paths, cfg: Config, notice: Option<String>) -> Self {
+    pub fn new(
+        paths: Paths,
+        cfg: Config,
+        notice: Option<String>,
+        read_only_reason: Option<String>,
+    ) -> Self {
         let secrets_prompt = Arc::new(InMemorySecretStore::default());
         let host_keys = Arc::new(FileHostKeyStore::new(paths.known_hosts.clone()));
-        // The runner captures `default_secret_mode` at construction; a later
-        // `save_settings` changing it takes effect on restart. Keyring is
-        // deferred beyond M1, where keyring and prompt behave identically.
+        // The runner shares the default secret mode through this lock: a
+        // later `save_settings` changing it takes effect immediately.
+        let default_secret_mode = Arc::new(RwLock::new(cfg.settings.default_secret_mode));
         let runner = Arc::new(RusshRunner::new(
             secrets_prompt.clone(),
             host_keys,
-            cfg.settings.default_secret_mode,
+            default_secret_mode.clone(),
         ));
         let stats = Arc::new(SshStatsProbe::new(runner.clone()));
         let poll_base = cfg.settings.poll_base_secs.max(1);
@@ -78,10 +90,12 @@ impl AppState {
             active: RwLock::new(None),
             notice: RwLock::new(notice),
             waker: UdpWaker,
+            read_only_reason: RwLock::new(read_only_reason),
             probe: TcpStatusProbe,
             opener: LinuxFileOpener,
             runner,
             stats,
+            default_secret_mode,
         }
     }
 }
@@ -89,56 +103,94 @@ impl AppState {
 /// Loads `config.toml` through `sm_core::load_from_text`, applying the spec §4.3
 /// side effects: on garbage/migration the original is copied to
 /// `config.toml.bak-<unix-ts>` and the fresh/upgraded file is written.
-/// Returns `(config, user_message)`; message is `None` when the file loaded clean.
-pub fn load_config(paths: &Paths) -> (Config, Option<String>) {
+pub struct LoadedConfig {
+    pub cfg: Config,
+    pub notice: Option<String>,
+    /// `Some(reason)` for `TooNew`: config writes are refused while set.
+    pub read_only_reason: Option<String>,
+}
+
+/// Loads `config.toml` through `sm_core::load_from_text`, applying the spec §4.3
+/// side effects: on garbage/migration the original is copied to
+/// `config.toml.bak-<unix-ts>` and the fresh/upgraded file is written.
+/// IO errors on the side-effect writes surface in the notice instead of
+/// being swallowed — the user sees that the backup/fresh-file step failed.
+pub fn load_config(paths: &Paths) -> LoadedConfig {
     let text = match std::fs::read_to_string(&paths.config) {
         Ok(text) => text,
-        Err(_) => return (Config::default(), None),
+        Err(_) => {
+            return LoadedConfig {
+                cfg: Config::default(),
+                notice: None,
+                read_only_reason: None,
+            };
+        }
     };
+    let io_err = |what: &str, e: std::io::Error| Some(format!("{what} failed: {e}"));
     match sm_core::load_from_text(&text) {
-        LoadOutcome::Loaded(config) => (config, None),
+        LoadOutcome::Loaded(config) => LoadedConfig {
+            cfg: config,
+            notice: None,
+            read_only_reason: None,
+        },
         LoadOutcome::MigratedFrom { from, config } => {
+            let mut notice: Option<String> = Some(format!(
+                "config.toml was upgraded from schema v{from} to v{}; \
+                 the old file was kept as config.toml.bak-*",
+                sm_core::CURRENT_SCHEMA
+            ));
             backup_current(paths, &text);
-            let _ = std::fs::write(&paths.config, sm_core::serialize_config(&config));
-            (
-                config,
-                Some(format!(
-                    "config.toml was upgraded from schema v{from} to v{}; \
-                     the old file was kept as config.toml.bak-*",
-                    sm_core::CURRENT_SCHEMA
-                )),
-            )
+            if let Err(e) = std::fs::write(&paths.config, sm_core::serialize_config(&config)) {
+                notice = io_err("rewriting upgraded config.toml", e);
+            }
+            LoadedConfig {
+                cfg: config,
+                notice,
+                read_only_reason: None,
+            }
         }
         LoadOutcome::BackedUpAndReset { reason, config } => {
+            let mut notice: Option<String> = Some(format!(
+                "config.toml is not valid TOML — it was backed up as \
+                 config.toml.bak-* and reset to defaults ({reason})"
+            ));
             backup_current(paths, &text);
-            let _ = std::fs::write(&paths.config, sm_core::serialize_config(&config));
-            (
-                config,
-                Some(format!(
-                    "config.toml is not valid TOML — it was backed up as \
-                     config.toml.bak-* and reset to defaults ({reason})"
-                )),
-            )
+            if let Err(e) = std::fs::write(&paths.config, sm_core::serialize_config(&config)) {
+                notice = io_err("resetting config.toml", e);
+            }
+            LoadedConfig {
+                cfg: config,
+                notice,
+                read_only_reason: None,
+            }
         }
-        LoadOutcome::TooNew { found } => (
-            Config::default(),
-            Some(format!(
+        LoadOutcome::TooNew { found } => LoadedConfig {
+            cfg: Config::default(),
+            notice: Some(format!(
                 "config.toml uses schema v{found}, newer than this app \
                  supports (v{}); running with defaults and refusing to write \
                  until the app is upgraded",
                 sm_core::CURRENT_SCHEMA
             )),
-        ),
+            read_only_reason: Some(format!(
+                "config.toml uses schema v{found} (newer than supported v{})",
+                sm_core::CURRENT_SCHEMA
+            )),
+        },
     }
 }
 
 /// Copies the current `config.toml` text to `config.toml.bak-<unix-ts>`.
+/// Best-effort: a failed backup is logged, not fatal — the config text is
+/// still in memory at this point and the fresh write below is what matters.
 fn backup_current(paths: &Paths, text: &str) {
     let now_unix = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)
         .unwrap_or(0);
-    let _ = std::fs::write(paths.dir.join(sm_core::backup_filename(now_unix)), text);
+    if let Err(e) = std::fs::write(paths.dir.join(sm_core::backup_filename(now_unix)), text) {
+        tracing::warn!("config backup write failed: {e}");
+    }
 }
 
 /// Validates then atomically writes `config.toml` (`config.toml.tmp` → rename).

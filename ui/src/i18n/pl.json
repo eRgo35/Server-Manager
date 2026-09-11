@@ -81,5 +81,6 @@
   "error.hostKeyUntrusted": "Klucz hosta SSH nie jest zaufany",
   "error.timeout": "Przekroczono czas połączenia",
   "error.remote": "Polecenie zdalne nie powiodło się",
-  "error.other": "Nieoczekiwany błąd"
+  "error.other": "Nieoczekiwany błąd",
+  "hostkey.fingerprint": "Odcisk klucza: {fp}"
 }

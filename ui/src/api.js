@@ -53,6 +53,11 @@ export const openFiles = (id) => invoke("open_files", { id });
  */
 export const trustHost = (id) => invoke("trust_host", { id });
 
+/** Fingerprint the server presented on the last host-key rejection.
+ * @param {string} id @returns {Promise<string|null>}
+ */
+export const pendingHostKey = (id) => invoke("pending_host_key", { id });
+
 /** Machine with all secret fields blanked.
  * @param {string} id @returns {Promise<object>}
  */

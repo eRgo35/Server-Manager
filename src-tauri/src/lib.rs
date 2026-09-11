@@ -13,8 +13,13 @@ use tauri::Manager;
 pub fn run() {
     let paths = state::resolve_paths();
     logging::init_logging(&paths);
-    let (cfg, notice) = state::load_config(&paths);
-    let app_state = Arc::new(state::AppState::new(paths, cfg, notice));
+    let loaded = state::load_config(&paths);
+    let app_state = Arc::new(state::AppState::new(
+        paths,
+        loaded.cfg,
+        loaded.notice,
+        loaded.read_only_reason,
+    ));
 
     tauri::Builder::default()
         .manage(app_state.clone())
@@ -34,7 +39,7 @@ pub fn run() {
             commands::save_settings,
             commands::wake,
             commands::refresh_now,
-            commands::power,
+            commands::pending_host_key,
             commands::trust_host,
             commands::provide_secret,
             commands::open_files,
