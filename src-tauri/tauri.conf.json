@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "identifier": "dev.czyz.servermanager",
   "build": {
+    "beforeDevCommand": "npm run dev",
     "frontendDist": "../ui/dist",
     "devUrl": "http://localhost:5173"
   },
