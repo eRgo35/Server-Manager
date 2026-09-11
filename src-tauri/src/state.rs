@@ -1,0 +1,103 @@
+//! App state: filesystem paths, shared config, and config load/save I/O.
+
+use std::path::PathBuf;
+use std::sync::{Arc, RwLock};
+
+use sm_core::{Config, LoadOutcome, MachineId};
+use sm_infra::InMemorySecretStore;
+
+/// Locations of everything the app keeps on disk, rooted at `dir`
+/// (Linux: `~/.config/server-manager/`, spec §4.1).
+pub struct Paths {
+    pub dir: PathBuf,
+    pub config: PathBuf,
+    pub known_hosts: PathBuf,
+    pub log: PathBuf,
+}
+
+/// Resolves the config directory via `directories::ProjectDirs` and creates it.
+pub fn resolve_paths() -> Paths {
+    let dir = directories::ProjectDirs::from("", "", "server-manager")
+        .expect("could not determine user config directory")
+        .config_dir()
+        .to_path_buf();
+    let _ = std::fs::create_dir_all(&dir);
+    Paths {
+        config: dir.join("config.toml"),
+        known_hosts: dir.join("known_hosts"),
+        log: dir.join("latest.log"),
+        dir,
+    }
+}
+
+/// Shared mutable state handed to Tauri commands (Task 18).
+pub struct AppState {
+    pub cfg: RwLock<Config>,
+    pub secrets_prompt: Arc<InMemorySecretStore>,
+    pub paths: Paths,
+    pub active: RwLock<Option<MachineId>>,
+}
+
+/// Loads `config.toml` through `sm_core::load_from_text`, applying the spec §4.3
+/// side effects: on garbage/migration the original is copied to
+/// `config.toml.bak-<unix-ts>` and the fresh/upgraded file is written.
+/// Returns `(config, user_message)`; message is `None` when the file loaded clean.
+pub fn load_config(paths: &Paths) -> (Config, Option<String>) {
+    let text = match std::fs::read_to_string(&paths.config) {
+        Ok(text) => text,
+        Err(_) => return (Config::default(), None),
+    };
+    match sm_core::load_from_text(&text) {
+        LoadOutcome::Loaded(config) => (config, None),
+        LoadOutcome::MigratedFrom { from, config } => {
+            backup_current(paths, &text);
+            let _ = std::fs::write(&paths.config, sm_core::serialize_config(&config));
+            (
+                config,
+                Some(format!(
+                    "config.toml was upgraded from schema v{from} to v{}; \
+                     the old file was kept as config.toml.bak-*",
+                    sm_core::CURRENT_SCHEMA
+                )),
+            )
+        }
+        LoadOutcome::BackedUpAndReset { reason, config } => {
+            backup_current(paths, &text);
+            let _ = std::fs::write(&paths.config, sm_core::serialize_config(&config));
+            (
+                config,
+                Some(format!(
+                    "config.toml is not valid TOML — it was backed up as \
+                     config.toml.bak-* and reset to defaults ({reason})"
+                )),
+            )
+        }
+        LoadOutcome::TooNew { found } => (
+            Config::default(),
+            Some(format!(
+                "config.toml uses schema v{found}, newer than this app \
+                 supports (v{}); running with defaults and refusing to write \
+                 until the app is upgraded",
+                sm_core::CURRENT_SCHEMA
+            )),
+        ),
+    }
+}
+
+/// Copies the current `config.toml` text to `config.toml.bak-<unix-ts>`.
+fn backup_current(paths: &Paths, text: &str) {
+    let now_unix = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let _ = std::fs::write(paths.dir.join(sm_core::backup_filename(now_unix)), text);
+}
+
+/// Validates then atomically writes `config.toml` (`config.toml.tmp` → rename).
+pub fn save_config(paths: &Paths, cfg: &Config) -> Result<(), String> {
+    sm_core::validate(cfg).map_err(|e| e.to_string())?;
+    let tmp = paths.config.with_extension("toml.tmp");
+    std::fs::write(&tmp, sm_core::serialize_config(cfg)).map_err(|e| e.to_string())?;
+    std::fs::rename(&tmp, &paths.config).map_err(|e| e.to_string())?;
+    Ok(())
+}
