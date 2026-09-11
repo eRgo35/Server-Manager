@@ -230,6 +230,14 @@ When `keyring` is chosen, the same store holds the SSH password *or*
 the key passphrase *or* the sudo password as needed — this is the
 "cache the passphrase on Windows and Android" ask.
 
+> **M1 amendment (2026-09-11, user decision):** the `keyring` mode is
+> **deferred beyond M1** — M1 ships `plaintext` and `prompt` only
+> (in-memory per session). The `keyring` crate's Linux backends either
+> don't persist across reboot (kernel keyutils) or need a system
+> libdbus build dependency, and no Android keystore backend exists in
+> the crate at all. Revisit the backend choice (and the Android gap)
+> at M2 planning.
+
 ### 7.2 Host key verification
 
 App-managed **TOFU**: on first connect, show the fingerprint and ask
