@@ -2,6 +2,8 @@
 //! green/red. State via the `status` attribute or property
 //! (`"online" | "offline" | "unknown"`); announces via `aria-live="polite"`.
 
+import { t } from "../i18n/index.js";
+
 const tpl = document.createElement("template");
 tpl.innerHTML = `
   <style>
@@ -33,8 +35,6 @@ tpl.innerHTML = `
   </div>
 `;
 
-const LABELS = { online: "ONLINE", offline: "OFFLINE" };
-
 export class StatusLine extends HTMLElement {
   #status = "unknown";
 
@@ -64,7 +64,11 @@ export class StatusLine extends HTMLElement {
       return; // attributeChangedCallback re-enters with the same value.
     }
     this.shadowRoot.querySelector(".text").textContent =
-      LABELS[this.#status] ?? "—";
+      this.#status === "online"
+        ? t("status.online")
+        : this.#status === "offline"
+        ? t("status.offline")
+        : "—";
   }
 }
 

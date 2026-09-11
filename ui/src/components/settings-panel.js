@@ -16,6 +16,8 @@
 //!   via `getMachine` and pushes it back as the `machine` property
 //! - `close {}` — panel toggled closed (informational)
 
+import { t } from "../i18n/index.js";
+
 const tpl = document.createElement("template");
 tpl.innerHTML = `
   <style>
@@ -120,7 +122,7 @@ tpl.innerHTML = `
   <button id="tab" aria-label="Toggle settings">‹</button>
   <aside id="panel">
     <section>
-      <h2>Settings</h2>
+      <h2 id="settings-title">Settings</h2>
       <div class="field"><label for="s-language">Language</label>
         <select id="s-language"><option value="en">English</option><option value="pl">Polish</option></select></div>
       <div class="field"><label for="s-theme">Theme</label>
@@ -138,7 +140,7 @@ tpl.innerHTML = `
     </section>
 
     <section>
-      <h2>Machines</h2>
+      <h2 id="machines-title">Machines</h2>
       <div class="row">
         <select id="machine-list" aria-label="Edit machine"></select>
         <button id="new-machine" title="Add a new machine">＋</button>
@@ -202,6 +204,73 @@ export class SettingsPanel extends HTMLElement {
         );
       }
     });
+    this.#localize();
+  }
+
+  /**
+   * Localizes all static template text (labels, headings, option labels,
+   * notes, buttons, titles). Called on construction (en) and again from
+   * `#fillGlobal` whenever a settings snapshot is pushed, so a language
+   * change re-renders everything.
+   */
+  #localize() {
+    const root = this.shadowRoot;
+    const label = (forId, key) => {
+      root.querySelector(`label[for="${forId}"]`).textContent = t(key);
+    };
+    root.getElementById("settings-title").textContent = t("settings.title");
+    root.getElementById("machines-title").textContent = t("settings.machines");
+    root.getElementById("tab").setAttribute("aria-label", t("toast.toggleSettings"));
+    root.getElementById("machine-list").setAttribute("aria-label", t("machine.editList"));
+    root.getElementById("new-machine").title = t("machine.newTitle");
+    root.getElementById("delete-machine").title = t("machine.deleteTitle");
+    root.getElementById("save-settings").textContent = t("settings.save");
+    root.getElementById("save-machine").textContent = t("machine.save");
+
+    for (const [id, key] of [
+      ["s-language", "settings.language"],
+      ["s-theme", "settings.theme"],
+      ["s-stats-display", "settings.statsDisplay"],
+      ["s-poll", "settings.pollBaseSecs"],
+      ["s-secret-mode", "settings.secretMode"],
+      ["s-mount", "settings.mountProtocol"],
+      ["m-id", "machine.id"],
+      ["m-name", "machine.name"],
+      ["m-mac", "machine.mac"],
+      ["m-broadcast", "machine.broadcast"],
+      ["m-os-host", "machine.host"],
+      ["m-ssh-port", "machine.sshPort"],
+      ["m-ssh-user", "machine.sshUser"],
+      ["m-key-path", "machine.keyFile"],
+      ["m-secret-mode", "machine.secretMode"],
+      ["m-shutdown", "machine.shutdownCmd"],
+      ["m-reboot", "machine.rebootCmd"],
+      ["m-stats", "machine.statsCmd"],
+      ["m-share", "machine.sharePath"],
+      ["m-ssh-password", "machine.sshPassword"],
+      ["m-key-passphrase", "machine.keyPassphrase"],
+      ["m-sudo-password", "machine.sudoPassword"],
+    ]) {
+      label(id, key);
+    }
+
+    // Option labels (the language options stay native: English / Polski).
+    for (const o of root.querySelectorAll("#s-theme option")) {
+      o.textContent = t(`settings.theme${o.value[0].toUpperCase()}${o.value.slice(1)}`);
+    }
+    for (const o of root.querySelectorAll("#s-stats-display option")) {
+      o.textContent = t(o.value === "numbers" ? "settings.statsNumbers" : "settings.statsGraph");
+    }
+    for (const selId of ["s-secret-mode", "m-secret-mode"]) {
+      for (const o of root.querySelectorAll(`#${selId} option`)) {
+        o.textContent = o.value === ""
+          ? t("machine.secretDefault")
+          : t(o.value === "plaintext" ? "settings.secretPlaintext" : "settings.secretPrompt");
+      }
+    }
+
+    root.querySelector("section .secret-note").textContent = t("settings.secretNote");
+    root.getElementById("secret-note").textContent = t("machine.plaintextNote");
   }
 
   // ----- state -----
@@ -257,8 +326,7 @@ export class SettingsPanel extends HTMLElement {
         detail: {
           settings: {
             language: $("s-language").value,
-            // T22: theme switching lands with the full theming task.
-            theme: "system",
+            theme: $("s-theme").value,
             stats_display: $("s-stats-display").value,
             poll_base_secs: Math.max(1, Math.trunc(Number($("s-poll").value)) || 5),
             default_secret_mode: $("s-secret-mode").value,
@@ -296,6 +364,9 @@ export class SettingsPanel extends HTMLElement {
     const $ = (id) => this.shadowRoot.getElementById(id);
     const s = this.#settings;
     if (!s) return;
+    // A pushed snapshot may carry a new language — re-localize first so the
+    // form shows the fresh strings, then fill the values.
+    this.#localize();
     $("s-language").value = s.language ?? "en";
     $("s-theme").value = s.theme ?? "system";
     $("s-stats-display").value = s.stats_display ?? "graph";
@@ -311,7 +382,7 @@ export class SettingsPanel extends HTMLElement {
     if (this.#machines.length === 0) {
       const o = document.createElement("option");
       o.value = "";
-      o.textContent = "(no machines)";
+      o.textContent = t("machine.none");
       sel.append(o);
     }
     for (const m of this.#machines) {

@@ -4,6 +4,8 @@
 //! (or `active` attribute). Emits `machine-change {id}` (bubbles, composed)
 //! when the user picks a machine; `id` is `null` when nothing is selected.
 
+import { t } from "../i18n/index.js";
+
 const tpl = document.createElement("template");
 tpl.innerHTML = `
   <style>
@@ -78,7 +80,7 @@ export class MachineSelector extends HTMLElement {
     if (this.#machines.length === 0) {
       const o = document.createElement("option");
       o.value = "";
-      o.textContent = "No machines configured";
+      o.textContent = t("machine.noneConfigured");
       sel.append(o);
     } else {
       for (const m of this.#machines) {

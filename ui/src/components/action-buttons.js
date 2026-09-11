@@ -10,6 +10,8 @@
 //! Emits `action {name}` with name one of
 //! `wake | shutdown | reboot | open-files | map-drive`.
 
+import { t } from "../i18n/index.js";
+
 const tpl = document.createElement("template");
 tpl.innerHTML = `
   <style>
@@ -41,11 +43,11 @@ tpl.innerHTML = `
     }
   </style>
   <div class="row">
-    <button data-action="wake" class="primary">Wake</button>
-    <button data-action="shutdown">Shutdown</button>
-    <button data-action="reboot">Reboot</button>
-    <button data-action="open-files">Open Files</button>
-    <button data-action="map-drive">Map Drive</button>
+    <button data-action="wake" class="primary"></button>
+    <button data-action="shutdown"></button>
+    <button data-action="reboot"></button>
+    <button data-action="open-files"></button>
+    <button data-action="map-drive"></button>
   </div>
 `;
 
@@ -116,6 +118,10 @@ export class ActionButtons extends HTMLElement {
     const android = this.#platform === "android";
     for (const b of this.shadowRoot.querySelectorAll("button[data-action]")) {
       const name = b.dataset.action;
+      // Label keys differ from the action names for the camelCase entries
+      // (`action.openFiles`, `action.mapDrive`).
+      const key = name === "open-files" ? "openFiles" : name;
+      b.textContent = t(`action.${key}`);
       b.disabled = this.#busy;
       switch (name) {
         case "wake":

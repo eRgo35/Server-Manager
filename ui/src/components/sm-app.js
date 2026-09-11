@@ -30,18 +30,13 @@ import {
   deleteMachine,
   wake,
 } from "../api.js";
+import { setLocale, t } from "../i18n/index.js";
 import "./machine-selector.js";
 import "./status-line.js";
 import "./action-buttons.js";
 import "./stats-panel.js";
 import "./settings-panel.js";
 import "./toast-host.js";
-
-const SECRET_LABELS = {
-  SshPassword: "SSH password",
-  KeyPassphrase: "key passphrase",
-  SudoPassword: "sudo password",
-};
 
 const tpl = document.createElement("template");
 tpl.innerHTML = `
@@ -71,6 +66,7 @@ export class SmApp extends HTMLElement {
   // AppSnapshot from get_state: {settings, machines, active, notice}
   #snapshot = null;
   #status = "unknown";
+  #lastStats = null; // last stats payload, re-pushed on locale change
   #platform = "desktop-linux";
   #lastNotice = null;
   #unlisteners = [];
@@ -129,6 +125,7 @@ export class SmApp extends HTMLElement {
   /** Clears per-machine state when the active machine changes. */
   #resetMachineState() {
     this.#status = "unknown";
+    this.#lastStats = null;
     this.$status.status = "unknown";
     this.$actions.status = "unknown";
     this.$stats.stats = null; // also clears the sparkline ring buffer
@@ -172,15 +169,15 @@ export class SmApp extends HTMLElement {
   #doneMsg(name) {
     switch (name) {
       case "wake":
-        return "Wake packet sent";
+        return t("toast.wakeSent");
       case "shutdown":
-        return "Shutdown command sent";
+        return t("toast.shutdownSent");
       case "reboot":
-        return "Reboot command sent";
+        return t("toast.rebootSent");
       case "open-files":
-        return "File manager opened";
+        return t("toast.filesOpened");
       default:
-        return "Done";
+        return t("toast.done");
     }
   }
 
@@ -199,21 +196,27 @@ export class SmApp extends HTMLElement {
       await this.#secretFlow(name, id, kind, op);
       return;
     }
-    this.#toast(msg, "error");
+    this.#toast(this.#errText(msg), "error");
+  }
+
+  /**
+   * Maps a raw backend error string to a translated message when it is
+   * exactly a `ServiceError` Display string the i18n dictionaries cover
+   * (`error.*`). Everything else passes through raw — the detail ("network:
+   * connection refused", "remote command failed (1): ...") matters.
+   */
+  #errText(msg) {
+    const key = { "auth failed": "error.auth", timeout: "error.timeout" }[msg];
+    return key ? t(key) : msg;
   }
 
   /** Host-key prompt → trustHost → retry the same operation. */
   async #hostKeyFlow(name, id, changed, op) {
-    const message = changed
-      ? "This server's SSH host key has CHANGED since it was last trusted. " +
-        "This can indicate a man-in-the-middle attack. " +
-        "Trust the new key and continue?"
-      : "This server's SSH host key is not trusted yet. Trust it and continue?";
-    const ok = await this.$toast.confirm(message, {
+    const ok = await this.$toast.confirm(t(changed ? "hostkey.changed" : "hostkey.prompt"), {
       kind: changed ? "danger" : "info",
     });
     if (!ok) {
-      this.#toast("Action cancelled — host key not trusted.", "info");
+      this.#toast(t("toast.cancelledHostKey"), "info");
       return;
     }
     try {
@@ -233,11 +236,11 @@ export class SmApp extends HTMLElement {
   /** Secret prompt → provideSecret → retry the same operation. */
   async #secretFlow(name, id, kind, op) {
     const res = await this.$toast.promptSecret(
-      `Enter the ${SECRET_LABELS[kind] ?? kind} for this machine:`,
+      t("secret.required", { kind: t(`secret.${kind}`) }),
       { kind: "info" },
     );
     if (!res) {
-      this.#toast("Action cancelled — no secret provided.", "info");
+      this.#toast(t("toast.cancelledSecret"), "info");
       return;
     }
     try {
@@ -287,12 +290,18 @@ export class SmApp extends HTMLElement {
     }
     this.$selector.machines = this.#snapshot.machines;
     this.$selector.active = this.#snapshot.active;
+    // Locale + theme come from the settings snapshot (i18n keeps the active
+    // locale in module state; the theme is an attribute on <html>).
+    setLocale(this.#snapshot.settings.language);
+    this.#applyTheme(this.#snapshot.settings.theme);
     this.$settings.settings = this.#snapshot.settings;
     this.$settings.machines = this.#snapshot.machines;
     this.$stats.display = this.#snapshot.settings.stats_display === "numbers"
       ? "numbers"
       : "graph";
     this.$actions.status = this.#status;
+    this.$status.status = this.#status;
+    this.$stats.stats = this.#lastStats;
     if (
       this.#snapshot.notice &&
       this.#snapshot.notice !== this.#lastNotice
@@ -322,19 +331,35 @@ export class SmApp extends HTMLElement {
   #onStatsEvent(payload) {
     if (!this.#snapshot || payload.id !== this.#snapshot.active) return;
     // Poller sends {id, stats} on success, {id, error} on failure.
-    this.$stats.stats = payload.error != null
+    // Kept so the panel can be re-rendered after a locale change.
+    this.#lastStats = payload.error != null
       ? { error: payload.error }
       : payload.stats;
+    this.$stats.stats = this.#lastStats;
+  }
+
+  /** spec §9.2: "system" follows the OS (no attribute); light/dark force it. */
+  #applyTheme(theme) {
+    if (theme === "dark" || theme === "light") {
+      document.documentElement.dataset.theme = theme;
+    } else {
+      delete document.documentElement.dataset.theme;
+    }
   }
 
   async #saveGlobalSettings(settings) {
     try {
       await saveSettings(settings);
+      // Language/theme apply immediately (loadState re-applies from the
+      // snapshot, but the select must reflect the choice even before save
+      // round-trips).
+      setLocale(settings.language);
+      this.#applyTheme(settings.theme);
       await this.#loadState();
       this.$stats.display = settings.stats_display === "numbers"
         ? "numbers"
         : "graph";
-      this.#toast("Settings saved", "success");
+      this.#toast(t("toast.settingsSaved"), "success");
     } catch (e) {
       this.#toast(String(e), "error");
     }
@@ -344,7 +369,10 @@ export class SmApp extends HTMLElement {
     try {
       await upsertMachine(machine);
       await this.#loadState();
-      this.#toast(`Machine "${machine.name || machine.id}" saved`, "success");
+      this.#toast(
+        t("machine.saved", { name: machine.name || machine.id }),
+        "success",
+      );
     } catch (e) {
       this.#toast(String(e), "error");
     }
@@ -354,7 +382,7 @@ export class SmApp extends HTMLElement {
     const machine = this.#snapshot?.machines.find((m) => m.id === id);
     const label = machine ? machine.name || machine.id : id;
     const ok = await this.$toast.confirm(
-      `Delete machine "${label}"? Its stored secrets are removed too.`,
+      t("machine.deleteConfirm", { name: label }),
       { kind: "danger" },
     );
     if (!ok) return;
@@ -365,7 +393,7 @@ export class SmApp extends HTMLElement {
         this.#resetMachineState();
       }
       await this.#loadState();
-      this.#toast(`Machine "${label}" deleted`, "success");
+      this.#toast(t("machine.deleted", { name: label }), "success");
     } catch (e) {
       this.#toast(String(e), "error");
     }

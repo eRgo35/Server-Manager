@@ -8,6 +8,7 @@
 //! - `promptSecret(message, {kind})` → `Promise<{value, remember}|null>`
 //!   (`null` when the user cancels or leaves the field empty).
 //!
+import { t } from "../i18n/index.js";
 //! `kind`: "info" | "success" | "error" | "danger" (danger styles the modal
 //! OK button red — used for the loud host-key-changed warning).
 
@@ -122,7 +123,7 @@ tpl.innerHTML = `
         <input id="secret-input" type="password" autocomplete="off" />
         <label class="remember">
           <input id="remember" type="checkbox" />
-          Remember (stored in config in plaintext mode)
+          <span id="remember-text">Remember (stored in config in plaintext mode)</span>
         </label>
       </div>
       <div class="buttons">
@@ -197,7 +198,7 @@ export class ToastHost extends HTMLElement {
    * Opens the shared modal; resolves with `true`, `null` (cancel/Escape/
    * backdrop) or, with `withSecret`, `{value, remember}`.
    */
-  #modal({ message, kind = "info", okLabel = "OK", cancelLabel = "Cancel", withSecret = false }) {
+  #modal({ message, kind = "info", okLabel = t("toast.ok"), cancelLabel = t("toast.cancel"), withSecret = false }) {
     return new Promise((resolve) => {
       // A previous modal should have resolved already; be defensive anyway.
       this.#resolvePending?.(null);
@@ -216,6 +217,8 @@ export class ToastHost extends HTMLElement {
       cancel.textContent = cancelLabel;
       ok.classList.toggle("danger", kind === "danger");
       secretRow.hidden = !withSecret;
+      this.shadowRoot.getElementById("remember-text").textContent =
+        t("toast.remember");
       input.value = "";
       remember.checked = false;
       overlay.hidden = false;

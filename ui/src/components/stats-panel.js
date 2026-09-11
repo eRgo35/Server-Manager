@@ -7,6 +7,8 @@
 //! `null` clears the buffer (used when the active machine changes); a stats
 //! object with an `error` field shows "unavailable" but keeps the buffer.
 
+import { t } from "../i18n/index.js";
+
 const tpl = document.createElement("template");
 tpl.innerHTML = `
   <style>
@@ -44,7 +46,7 @@ tpl.innerHTML = `
     }
     .hidden { display: none; }
   </style>
-  <div class="unavail">unavailable</div>
+  <div class="unavail"></div>
   <div class="nums hidden"></div>
   <svg class="hidden" viewBox="0 0 60 24" preserveAspectRatio="none" aria-hidden="true">
     <polyline points=""></polyline>
@@ -111,6 +113,12 @@ export class StatsPanel extends HTMLElement {
    * @param {object|null} v
    */
   set stats(v) {
+    if (v === this.#stats) {
+      // Same payload re-pushed (e.g. re-render after a locale change):
+      // re-render only, do not sample the sparkline buffer again.
+      this.#render();
+      return;
+    }
     if (v == null) {
       this.#samples = [];
     } else if (v.error == null && typeof v.cpu_pct === "number") {
@@ -138,10 +146,10 @@ export class StatsPanel extends HTMLElement {
       svg.classList.add("hidden");
       if (this.#stats && this.#stats.error) {
         unavailEl.title = this.#stats.error;
-        unavailEl.textContent = `unavailable (${this.#stats.error})`;
+        unavailEl.textContent = `${t("stats.unavailable")} (${this.#stats.error})`;
       } else {
         unavailEl.title = "";
-        unavailEl.textContent = "unavailable";
+        unavailEl.textContent = t("stats.unavailable");
       }
       return;
     }
@@ -150,11 +158,7 @@ export class StatsPanel extends HTMLElement {
     if (this.#display === "numbers") {
       nums.classList.remove("hidden");
       svg.classList.add("hidden");
-      nums.innerHTML = `
-        <div><span class="label">CPU</span>${s.cpu_pct.toFixed(1)}%</div>
-        <div><span class="label">Mem</span>${humanBytes(s.mem_used)} / ${humanBytes(s.mem_total)}</div>
-        <div><span class="label">Disk</span>${humanBytes(s.disk_used)} / ${humanBytes(s.disk_total)}</div>
-        <div><span class="label">Up</span>${humanUptime(s.uptime_secs)}</div>`;
+      nums.innerHTML = this.#numsHtml(s, s.cpu_pct.toFixed(1) + "%");
       return;
     }
 
@@ -169,11 +173,16 @@ export class StatsPanel extends HTMLElement {
     polyline.setAttribute("points", points);
 
     const last = this.#samples.at(-1);
-    nums.innerHTML = `
-      <div><span class="label">CPU</span>${last == null ? "—" : `${last.toFixed(1)}%`}</div>
-      <div><span class="label">Mem</span>${humanBytes(s.mem_used)} / ${humanBytes(s.mem_total)}</div>
-      <div><span class="label">Disk</span>${humanBytes(s.disk_used)} / ${humanBytes(s.disk_total)}</div>
-      <div><span class="label">Up</span>${humanUptime(s.uptime_secs)}</div>`;
+    nums.innerHTML = this.#numsHtml(s, last == null ? "—" : `${last.toFixed(1)}%`);
+  }
+
+  /** The compact numbers row shared by both display modes. */
+  #numsHtml(s, cpuCell) {
+    return `
+      <div><span class="label">${t("stats.cpu")}</span>${cpuCell}</div>
+      <div><span class="label">${t("stats.mem")}</span>${humanBytes(s.mem_used)} / ${humanBytes(s.mem_total)}</div>
+      <div><span class="label">${t("stats.disk")}</span>${humanBytes(s.disk_used)} / ${humanBytes(s.disk_total)}</div>
+      <div><span class="label">${t("stats.uptime")}</span>${humanUptime(s.uptime_secs)}</div>`;
   }
 }
 

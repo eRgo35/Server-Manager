@@ -1,5 +1,12 @@
-/* Starter theme tokens — Task 22 owns the full theming (light/dark
-   overrides + [data-theme] switches land there). */
+/* Theme tokens (spec §9.2): light by default, dark via the OS preference,
+   with explicit light/dark overrides driven by the `data-theme` attribute
+   that <sm-app> sets on <html> from `settings.theme` ("system" removes it).
+   The attribute selectors are more specific than the bare `:root` blocks,
+   so an explicit choice always wins over the media query in both
+   directions (light choice on a dark OS, dark choice on a light OS).
+   Components consume the custom properties through shadow DOM — custom
+   properties inherit across shadow boundaries, so no per-component work
+   is needed. */
 
 :root {
   --bg: #ffffff;
@@ -23,4 +30,26 @@
     --err: #ef4444;
     --border: #374151;
   }
+}
+
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #6b7280;
+  --surface: #f3f4f6;
+  --accent: #2563eb;
+  --ok: #16a34a;
+  --err: #dc2626;
+  --border: #d1d5db;
+}
+
+:root[data-theme="dark"] {
+  --bg: #111318;
+  --fg: #e5e7eb;
+  --muted: #9ca3af;
+  --surface: #1f232b;
+  --accent: #3b82f6;
+  --ok: #22c55e;
+  --err: #ef4444;
+  --border: #374151;
 }
