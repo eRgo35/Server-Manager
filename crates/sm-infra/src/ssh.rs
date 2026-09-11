@@ -29,15 +29,10 @@ pub(crate) enum AuthStep {
     Password,
 }
 
-/// Effective secret mode: machine override or app default.
-///
-/// `Keyring` is deferred beyond M1 and resolved as `Prompt`
-/// (user decision 2026-09-11), so a prompt-mode store lookup is attempted.
+/// Effective secret mode: machine override or app default. The `Keyring` →
+/// `Prompt` mapping (user decision 2026-09-11) happens in [`auth_plan`].
 fn effective_mode(machine: &Machine, default_mode: SecretMode) -> SecretMode {
-    match machine.secret_mode.unwrap_or(default_mode) {
-        SecretMode::Keyring => SecretMode::Prompt,
-        m => m,
-    }
+    machine.secret_mode.unwrap_or(default_mode)
 }
 
 /// Pure auth-method selection.
@@ -235,7 +230,10 @@ async fn authenticate<S: SecretStore>(
                 has_passphrase,
             } => {
                 let passphrase = if *has_passphrase {
-                    secrets.get(&machine.id, SecretKind::KeyPassphrase)
+                    machine
+                        .key_passphrase
+                        .clone()
+                        .or_else(|| secrets.get(&machine.id, SecretKind::KeyPassphrase))
                 } else {
                     None
                 };
@@ -400,8 +398,8 @@ mod tests {
         assert_eq!(plan, vec![AuthStep::Password]);
     }
 
-    // Brief test 2, verbatim. `Keyring` must resolve as `Prompt` (user
-    // decision 2026-09-11), so only the agent applies here.
+    // Brief test 2, verbatim. `Keyring` resolves as `Prompt`, so the plan is
+    // [Agent, Password] with the agent first.
     #[test]
     fn agent_first_when_available_and_no_explicit_key() {
         let plan = auth_plan(&test_machine(), SecretMode::Keyring, true);
