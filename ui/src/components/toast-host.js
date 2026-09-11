@@ -225,7 +225,13 @@ export class ToastHost extends HTMLElement {
       if (withSecret) input.focus();
       else ok.focus();
 
+      const onKey = (e) => {
+        if (e.key === "Escape") done(null);
+      };
+      this.shadowRoot.addEventListener("keydown", onKey);
+
       const done = (v) => {
+        this.shadowRoot.removeEventListener("keydown", onKey);
         this.#resolvePending = null;
         overlay.hidden = true;
         resolve(v);
