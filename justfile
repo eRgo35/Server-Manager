@@ -16,6 +16,15 @@ lint:
 test:
     cargo test --workspace
 
+# tauri dev shell; DMABUF renderer disabled — WebKitGTK crashes the GTK loop
+# on Wayland ("Error 71 dispatching to Wayland display") without this
+dev:
+    WEBKIT_DISABLE_DMABUF_RENDERER=1 cargo tauri dev
+
+# plain cargo run of the tauri binary (no devUrl); same Wayland workaround
+run:
+    WEBKIT_DISABLE_DMABUF_RENDERER=1 cargo run
+
 # docker-backed SSH tests, opt-in (needs docker; never part of `just test`)
 test-integration:
     docker compose -f tests/integration/docker-compose.yml up -d
