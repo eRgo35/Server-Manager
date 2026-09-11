@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
 sm-core = { path = "../sm-core" }
 sm-services = { path = "../sm-services" }
 tokio = { workspace = true }
