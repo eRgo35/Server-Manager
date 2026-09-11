@@ -4,7 +4,10 @@ use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
 use sm_core::{Config, LoadOutcome, MachineId};
-use sm_infra::InMemorySecretStore;
+use sm_infra::files::LinuxFileOpener;
+use sm_infra::probe::TcpStatusProbe;
+use sm_infra::wol::UdpWaker;
+use sm_infra::{FileHostKeyStore, InMemorySecretStore, RusshRunner, SshStatsProbe};
 
 /// Locations of everything the app keeps on disk, rooted at `dir`
 /// (Linux: `~/.config/server-manager/`, spec §4.1).
@@ -36,6 +39,43 @@ pub struct AppState {
     pub secrets_prompt: Arc<InMemorySecretStore>,
     pub paths: Paths,
     pub active: RwLock<Option<MachineId>>,
+    /// Startup message from `load_config` (migration/reset), shown once by the UI.
+    pub notice: RwLock<Option<String>>,
+    pub waker: UdpWaker,
+    pub probe: TcpStatusProbe,
+    pub opener: LinuxFileOpener,
+    pub runner: Arc<RusshRunner<InMemorySecretStore, FileHostKeyStore>>,
+    pub stats: Arc<SshStatsProbe<RusshRunner<InMemorySecretStore, FileHostKeyStore>>>,
+}
+
+impl AppState {
+    /// Wires the infra implementations: the TOFU store points at
+    /// `paths.known_hosts`, and the runner/probe share the prompt secret store.
+    pub fn new(paths: Paths, cfg: Config, notice: Option<String>) -> Self {
+        let secrets_prompt = Arc::new(InMemorySecretStore::default());
+        let host_keys = Arc::new(FileHostKeyStore::new(paths.known_hosts.clone()));
+        // The runner captures `default_secret_mode` at construction; a later
+        // `save_settings` changing it takes effect on restart. Keyring is
+        // deferred beyond M1, where keyring and prompt behave identically.
+        let runner = Arc::new(RusshRunner::new(
+            secrets_prompt.clone(),
+            host_keys,
+            cfg.settings.default_secret_mode,
+        ));
+        let stats = Arc::new(SshStatsProbe::new(runner.clone()));
+        AppState {
+            cfg: RwLock::new(cfg),
+            secrets_prompt,
+            paths,
+            active: RwLock::new(None),
+            notice: RwLock::new(notice),
+            waker: UdpWaker,
+            probe: TcpStatusProbe,
+            opener: LinuxFileOpener,
+            runner,
+            stats,
+        }
+    }
 }
 
 /// Loads `config.toml` through `sm_core::load_from_text`, applying the spec §4.3

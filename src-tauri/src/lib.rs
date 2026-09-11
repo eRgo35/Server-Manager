@@ -1,8 +1,35 @@
+pub mod commands;
 pub mod logging;
 pub mod state;
 
-/// Runs the desktop app. Wiring of the Tauri builder and commands lands in
-/// Tasks 18/19; nothing may reach this in M1 tests, hence the explicit abort.
+use std::sync::Arc;
+
+/// Runs the desktop app: loads the config, wires the infra-backed
+/// `AppState`, and registers every invoke command (Task 18). Poller wiring
+/// (poll loop, backoff) lands in Task 19.
 pub fn run() {
-    unimplemented!("tauri runtime wiring lands in Task 18");
+    let paths = state::resolve_paths();
+    logging::init_logging(&paths);
+    let (cfg, notice) = state::load_config(&paths);
+    let app_state = Arc::new(state::AppState::new(paths, cfg, notice));
+
+    tauri::Builder::default()
+        .manage(app_state)
+        .invoke_handler(tauri::generate_handler![
+            commands::get_state,
+            commands::set_active,
+            commands::get_machine,
+            commands::upsert_machine,
+            commands::delete_machine,
+            commands::save_settings,
+            commands::wake,
+            commands::refresh_now,
+            commands::power,
+            commands::trust_host,
+            commands::provide_secret,
+            commands::open_files,
+            commands::sample_stats,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
