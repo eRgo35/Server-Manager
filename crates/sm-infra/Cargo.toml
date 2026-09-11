@@ -5,6 +5,9 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+base64 = "0.22"
+russh = "0.63"
+sha2 = "0.10"
 sm-core = { path = "../sm-core" }
 sm-services = { path = "../sm-services" }
 tokio = { workspace = true }
