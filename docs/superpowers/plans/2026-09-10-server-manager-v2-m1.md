@@ -1727,7 +1727,9 @@ Expected: `src-tauri/target/release/bundle/appimage/*.AppImage` and `.../rpm/*.r
   - `release-linux` (ubuntu, on tag `v2.*`): `just build-linux`, upload AppImage + rpm + PKGBUILD tarball to a GitHub Release.
 
 - [ ] **Step 1: Write `ci.yml`** with the three jobs, pinned action SHAs or `@vN`.
-- [ ] **Step 2: Push the branch, open a draft PR from `v2`** (base `master`), confirm `lint-test` + `integration` go green.
+- [ ] **Step 2: Push the branch.** CI triggers on push to `v2` + tag (no PR
+  to `master` — v2 is an orphan branch and the new main line; recorded
+  ruling). Confirm `lint-test` + `integration` go green.
 - [ ] **Step 3: Tag a `v2.0.0-rc.1` prerelease** on a scratch push to confirm `release-linux` uploads artifacts; delete the test release after.
 - [ ] **Step 4: Commit** — `git commit -m "ci: lint/test, docker integration, and linux release workflow"`
 
