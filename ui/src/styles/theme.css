@@ -1,0 +1,26 @@
+/* Starter theme tokens — Task 22 owns the full theming (light/dark
+   overrides + [data-theme] switches land there). */
+
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #6b7280;
+  --surface: #f3f4f6;
+  --accent: #2563eb;
+  --ok: #16a34a;
+  --err: #dc2626;
+  --border: #d1d5db;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111318;
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --surface: #1f232b;
+    --accent: #3b82f6;
+    --ok: #22c55e;
+    --err: #ef4444;
+    --border: #374151;
+  }
+}
