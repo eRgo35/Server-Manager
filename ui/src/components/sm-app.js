@@ -153,17 +153,17 @@ export class SmApp extends HTMLElement {
   #opFor(name, id) {
     switch (name) {
       case "wake":
-        return wake(id);
+        return () => wake(id);
       case "shutdown":
       case "reboot":
-        return power(id, name);
+        return () => power(id, name);
       case "open-files":
-        return openFiles(id);
+        return () => openFiles(id);
       case "map-drive":
         // Map Drive is Windows-only (spec §8) and hidden elsewhere; the
         // wizard-prefill/clipboard flow needs a backend command that M1
         // does not ship, so surface it explicitly if it is ever reached.
-        return Promise.reject("Map Drive requires Windows (later milestone)");
+        return () => Promise.reject("Map Drive requires Windows (later milestone)");
       default:
         return null;
     }
