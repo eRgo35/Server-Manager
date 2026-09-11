@@ -9,6 +9,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: system-ui, sans-serif;
+  font-size: 13px;
 }
 
 sm-app {
