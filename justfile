@@ -21,8 +21,11 @@ test:
 dev:
     WEBKIT_DISABLE_DMABUF_RENDERER=1 cargo tauri dev
 
-# plain cargo run of the tauri binary (no devUrl); same Wayland workaround
+# plain cargo run of the tauri binary (no devUrl); same Wayland workaround.
+# The binary embeds ui/dist at compile time, so refresh the dist first —
+# otherwise a stale frontend ships in the window.
 run:
+    cd ui && npm run build
     WEBKIT_DISABLE_DMABUF_RENDERER=1 cargo run
 
 # docker-backed SSH tests, opt-in (needs docker; never part of `just test`)
