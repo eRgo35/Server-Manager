@@ -23,6 +23,14 @@
     }
   },
   "bundle": {
-    "active": false
+    "active": true,
+    "targets": ["appimage", "rpm"],
+    "category": "Utility",
+    "icon": ["icons/icon.png"],
+    "linux": {
+      "rpm": {
+        "depends": ["webkit2gtk4.1"]
+      }
+    }
   }
 }

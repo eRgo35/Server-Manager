@@ -1,0 +1,15 @@
+# Maintainer: Michał Czyż <mike@cze.rs>
+pkgname=server-manager
+pkgver=@VERSION@
+pkgrel=1
+pkgdesc="Manage servers: status, wake-on-LAN, SSH power and stats"
+arch=('x86_64')
+url="https://github.com/mikeczyz/Server-Manager"
+license=('MIT')
+depends=('webkit2gtk-4.1' 'gtk3')
+
+package() {
+    install -Dm755 server-manager "${pkgdir}/usr/bin/server-manager"
+    install -Dm644 server-manager.desktop "${pkgdir}/usr/share/applications/server-manager.desktop"
+    install -Dm644 server-manager.png "${pkgdir}/usr/share/icons/hicolor/32x32/apps/server-manager.png"
+}

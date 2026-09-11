@@ -32,8 +32,10 @@ test-integration:
     -cargo test --package sm-infra --test ssh_it -- --ignored --test-threads 1
     docker compose -f tests/integration/docker-compose.yml down -v
 
+# NO_STRIP: the linuxdeploy AppImage Tauri pins bundles binutils too old to
+# strip Fedora's .relr.dyn sections, which fails the whole AppImage bundling
 build-linux:
-    cargo tauri build --bundles appimage,rpm
+    NO_STRIP=1 cargo tauri build --bundles appimage,rpm
     bash packaging/build-pkgbuild.sh
 
 build-android:

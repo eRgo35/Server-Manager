@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Server Manager
+Comment=Manage servers: status, wake-on-LAN, SSH power and stats
+Exec=server-manager
+Icon=server-manager
+Categories=Network;Utility;
