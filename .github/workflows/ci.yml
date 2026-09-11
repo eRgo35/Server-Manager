@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    tags: ["v2.*"]
+    branches: [v2, master]
+  pull_request:
+    branches: [master, v2]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: dtolnay/rust-toolchain@1.98
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@988648c00164cd0e1a3ba0ada5f37a682d52f183 # v2
+
+      - name: Install system deps (tauri)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - name: Lint
+        run: |
+          cargo fmt --all --check
+          cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Unit tests
+        run: cargo test --workspace
+
+      - name: UI tests
+        working-directory: ui
+        run: |
+          npm ci
+          npm test
+          npm run build
+
+  integration:
+    needs: lint-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: dtolnay/rust-toolchain@1.98
+      - uses: Swatinem/rust-cache@988648c00164cd0e1a3ba0ada5f37a682d52f183 # v2
+
+      - name: Start sshd
+        run: docker compose -f tests/integration/docker-compose.yml up -d --wait
+
+      - name: Wait for sshd port
+        run: |
+          for i in $(seq 1 60); do
+            if (exec 3<>/dev/tcp/127.0.0.1/2222) 2>/dev/null; then exec 3>&-; exit 0; fi
+            sleep 1
+          done
+          echo "sshd never became reachable" >&2
+          exit 1
+
+      - name: SSH integration tests
+        run: cargo test -p sm-infra --test ssh_it -- --ignored --test-threads 1
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f tests/integration/docker-compose.yml down -v
+
+  release-linux:
+    if: startsWith(github.ref, 'refs/tags/v2.')
+    needs: lint-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      - uses: dtolnay/rust-toolchain@1.98
+      - uses: Swatinem/rust-cache@988648c00164cd0e1a3ba0ada5f37a682d52f183 # v2
+
+      - name: Install tauri-cli + system deps
+        run: |
+          cargo install tauri-cli --locked
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev rpm rpmlint
+
+      - name: Build AppImage + rpm + PKGBUILD
+        run: just build-linux
+
+      - name: Upload artifacts to release
+        uses: softprops/action-gh-release@6cbd405e2c4e67de7ce52b5a96e30d76672e8a55 # v2
+        with:
+          files: |
+            target/release/bundle/appimage/*.AppImage
+            target/release/bundle/rpm/*.rpm
+            packaging/out/PKGBUILD
+            packaging/out/server-manager

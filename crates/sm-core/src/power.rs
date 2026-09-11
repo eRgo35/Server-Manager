@@ -11,14 +11,8 @@ pub struct PowerPlan {
 
 pub fn resolve_power(machine: &Machine, action: PowerAction) -> PowerPlan {
     let primary = match action {
-        PowerAction::Shutdown => machine
-            .shutdown_cmd
-            .as_deref()
-            .unwrap_or(DEFAULT_SHUTDOWN),
-        PowerAction::Reboot => machine
-            .reboot_cmd
-            .as_deref()
-            .unwrap_or(DEFAULT_REBOOT),
+        PowerAction::Shutdown => machine.shutdown_cmd.as_deref().unwrap_or(DEFAULT_SHUTDOWN),
+        PowerAction::Reboot => machine.reboot_cmd.as_deref().unwrap_or(DEFAULT_REBOOT),
     };
 
     let sudo_fallback = if machine.sudo_password.is_some() {
@@ -89,7 +83,10 @@ mod tests {
         mm.sudo_password = Some("pw".into());
         let p = resolve_power(&mm, PowerAction::Reboot);
         assert_eq!(p.primary, "systemctl reboot");
-        assert_eq!(p.sudo_fallback.as_deref(), Some("sudo -S -p '' systemctl reboot"));
+        assert_eq!(
+            p.sudo_fallback.as_deref(),
+            Some("sudo -S -p '' systemctl reboot")
+        );
     }
 
     #[test]

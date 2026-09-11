@@ -24,7 +24,9 @@ pub enum SecretMode {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum Theme {
+    #[default]
     System,
     Light,
     Dark,
@@ -32,14 +34,18 @@ pub enum Theme {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum StatsDisplay {
+    #[default]
     Graph,
     Numbers,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum MountProtocol {
+    #[default]
     Smb,
     Sshfs,
 }
@@ -129,21 +135,6 @@ fn def_secret() -> SecretMode {
     SecretMode::Keyring
 }
 
-impl Default for Theme {
-    fn default() -> Self {
-        Theme::System
-    }
-}
-impl Default for StatsDisplay {
-    fn default() -> Self {
-        StatsDisplay::Graph
-    }
-}
-impl Default for MountProtocol {
-    fn default() -> Self {
-        MountProtocol::Smb
-    }
-}
 impl Default for Settings {
     fn default() -> Self {
         Settings {
@@ -179,7 +170,10 @@ mod tests {
 
     #[test]
     fn secret_mode_serde_is_lowercase() {
-        let s = toml::to_string(&Wrap { v: SecretMode::Keyring }).unwrap();
+        let s = toml::to_string(&Wrap {
+            v: SecretMode::Keyring,
+        })
+        .unwrap();
         assert!(s.contains("\"keyring\""));
         let back: Wrap = toml::from_str("v = \"prompt\"").unwrap();
         assert_eq!(back.v, SecretMode::Prompt);

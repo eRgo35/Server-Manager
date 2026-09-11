@@ -59,10 +59,7 @@ impl HostKeyStore for FileHostKeyStore {
                 let mut out = String::with_capacity(text.len() + line.len());
                 let mut replaced = false;
                 for l in text.lines() {
-                    if l
-                        .split_once(' ')
-                        .is_some_and(|(h, _)| h.trim() == key)
-                    {
+                    if l.split_once(' ').is_some_and(|(h, _)| h.trim() == key) {
                         if !replaced {
                             out.push_str(&line);
                             replaced = true;
@@ -102,9 +99,15 @@ mod tests {
     fn unknown_then_trusted_then_changed() {
         let dir = tempfile::tempdir().unwrap();
         let store = FileHostKeyStore::new(dir.path().join("known_hosts"));
-        assert_eq!(store.verify("nas", 22, "SHA256:aaa"), HostKeyVerdict::Unknown);
+        assert_eq!(
+            store.verify("nas", 22, "SHA256:aaa"),
+            HostKeyVerdict::Unknown
+        );
         store.trust("nas", 22, "SHA256:aaa").unwrap();
-        assert_eq!(store.verify("nas", 22, "SHA256:aaa"), HostKeyVerdict::TrustedMatch);
+        assert_eq!(
+            store.verify("nas", 22, "SHA256:aaa"),
+            HostKeyVerdict::TrustedMatch
+        );
         match store.verify("nas", 22, "SHA256:bbb") {
             HostKeyVerdict::Changed { stored_fp } => assert_eq!(stored_fp, "SHA256:aaa"),
             v => panic!("{v:?}"),
@@ -121,12 +124,24 @@ mod tests {
         // Overwriting "nas:22" must not delete the "nas:2222" entry.
         store.trust("nas", 2222, "SHA256:x").unwrap();
         store.trust("nas", 22, "SHA256:aaa").unwrap();
-        assert_eq!(store.verify("nas", 2222, "SHA256:x"), HostKeyVerdict::TrustedMatch);
-        assert_eq!(store.verify("nas", 22, "SHA256:aaa"), HostKeyVerdict::TrustedMatch);
+        assert_eq!(
+            store.verify("nas", 2222, "SHA256:x"),
+            HostKeyVerdict::TrustedMatch
+        );
+        assert_eq!(
+            store.verify("nas", 22, "SHA256:aaa"),
+            HostKeyVerdict::TrustedMatch
+        );
 
         // Reverse direction: overwriting "nas:2222" must not delete "nas:22".
         store.trust("nas", 2222, "SHA256:y").unwrap();
-        assert_eq!(store.verify("nas", 22, "SHA256:aaa"), HostKeyVerdict::TrustedMatch);
-        assert_eq!(store.verify("nas", 2222, "SHA256:y"), HostKeyVerdict::TrustedMatch);
+        assert_eq!(
+            store.verify("nas", 22, "SHA256:aaa"),
+            HostKeyVerdict::TrustedMatch
+        );
+        assert_eq!(
+            store.verify("nas", 2222, "SHA256:y"),
+            HostKeyVerdict::TrustedMatch
+        );
     }
 }

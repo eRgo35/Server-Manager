@@ -80,7 +80,12 @@ pub enum SecretKind {
 /// Persistent secret storage (sync).
 pub trait SecretStore: Send + Sync {
     fn get(&self, machine_id: &MachineId, kind: SecretKind) -> Option<String>;
-    fn set(&self, machine_id: &MachineId, kind: SecretKind, value: &str) -> Result<(), ServiceError>;
+    fn set(
+        &self,
+        machine_id: &MachineId,
+        kind: SecretKind,
+        value: &str,
+    ) -> Result<(), ServiceError>;
     fn clear(&self, machine_id: &MachineId, kind: SecretKind) -> Result<(), ServiceError>;
 }
 

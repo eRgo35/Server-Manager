@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::model::{Machine, MachineId, Settings};
+use serde::{Deserialize, Serialize};
 
 pub const CURRENT_SCHEMA: u32 = 2;
 
@@ -12,11 +12,17 @@ pub struct Config {
     #[serde(default, rename = "machine")]
     pub machines: Vec<Machine>,
 }
-fn def_schema() -> u32 { CURRENT_SCHEMA }
+fn def_schema() -> u32 {
+    CURRENT_SCHEMA
+}
 
 impl Default for Config {
     fn default() -> Self {
-        Config { schema_version: CURRENT_SCHEMA, settings: Settings::default(), machines: vec![] }
+        Config {
+            schema_version: CURRENT_SCHEMA,
+            settings: Settings::default(),
+            machines: vec![],
+        }
     }
 }
 
@@ -40,27 +46,41 @@ pub fn serialize_config(cfg: &Config) -> String {
 
 fn valid_mac(s: &str) -> bool {
     let parts: Vec<&str> = s.split([':', '-']).collect();
-    parts.len() == 6 && parts.iter().all(|p| p.len() == 2 && p.chars().all(|c| c.is_ascii_hexdigit()))
+    parts.len() == 6
+        && parts
+            .iter()
+            .all(|p| p.len() == 2 && p.chars().all(|c| c.is_ascii_hexdigit()))
 }
 
 pub fn validate(cfg: &Config) -> Result<(), ConfigError> {
     use std::collections::HashSet;
     let mut seen = HashSet::new();
     if cfg.settings.poll_base_secs < 1 {
-        return Err(ConfigError::Validation("poll_base_secs must be >= 1".into()));
+        return Err(ConfigError::Validation(
+            "poll_base_secs must be >= 1".into(),
+        ));
     }
     for m in &cfg.machines {
         if !seen.insert(&m.id.0) {
-            return Err(ConfigError::Validation(format!("duplicate machine id: {}", m.id)));
+            return Err(ConfigError::Validation(format!(
+                "duplicate machine id: {}",
+                m.id
+            )));
         }
         if !valid_mac(&m.mac) {
             return Err(ConfigError::Validation(format!("invalid mac for {}", m.id)));
         }
         if m.ssh_port == 0 {
-            return Err(ConfigError::Validation(format!("ssh_port is 0 for {}", m.id)));
+            return Err(ConfigError::Validation(format!(
+                "ssh_port is 0 for {}",
+                m.id
+            )));
         }
         if m.os_host.trim().is_empty() || m.ssh_user.trim().is_empty() {
-            return Err(ConfigError::Validation(format!("os_host/ssh_user empty for {}", m.id)));
+            return Err(ConfigError::Validation(format!(
+                "os_host/ssh_user empty for {}",
+                m.id
+            )));
         }
     }
     Ok(())
@@ -116,11 +136,17 @@ ssh_user = "mike"
     #[test]
     fn rejects_duplicate_ids() {
         let dup = format!("{SAMPLE}\n[[machine]]\nid=\"nas\"\nname=\"x\"\nmac=\"AA:BB:CC:DD:EE:00\"\nos_host=\"h\"\nssh_user=\"u\"\n");
-        assert!(matches!(parse_config(&dup).unwrap_err(), ConfigError::Validation(_)));
+        assert!(matches!(
+            parse_config(&dup).unwrap_err(),
+            ConfigError::Validation(_)
+        ));
     }
 
     #[test]
     fn parse_error_on_garbage() {
-        assert!(matches!(parse_config("this is not toml =").unwrap_err(), ConfigError::Parse(_)));
+        assert!(matches!(
+            parse_config("this is not toml =").unwrap_err(),
+            ConfigError::Parse(_)
+        ));
     }
 }

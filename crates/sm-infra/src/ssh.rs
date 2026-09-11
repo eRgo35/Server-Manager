@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use russh::keys::{HashAlg, PrivateKeyWithHashAlg};
-use russh::{ChannelMsg, client};
+use russh::{client, ChannelMsg};
 use sm_core::{Machine, SecretMode};
 use sm_services::{
     CommandOutput, HostKeyStore, HostKeyVerdict, SecretKind, SecretStore, ServiceError, SshRunner,
@@ -22,10 +22,7 @@ const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 #[derive(Debug, PartialEq)]
 pub(crate) enum AuthStep {
     Agent,
-    Key {
-        path: String,
-        has_passphrase: bool,
-    },
+    Key { path: String, has_passphrase: bool },
     Password,
 }
 
@@ -44,7 +41,11 @@ fn effective_mode(machine: &Machine, default_mode: SecretMode) -> SecretMode {
 /// - `Password` when a password source may exist: the machine holds a
 ///   plaintext password, or the effective mode is `Prompt` (the store may hold
 ///   one).
-pub(crate) fn auth_plan(machine: &Machine, mode: SecretMode, agent_available: bool) -> Vec<AuthStep> {
+pub(crate) fn auth_plan(
+    machine: &Machine,
+    mode: SecretMode,
+    agent_available: bool,
+) -> Vec<AuthStep> {
     // Keyring is deferred beyond M1: a prompt-mode store lookup is attempted.
     let mode = match mode {
         SecretMode::Keyring => SecretMode::Prompt,
@@ -206,8 +207,7 @@ async fn authenticate<S: SecretStore>(
                 if std::env::var_os("SSH_AUTH_SOCK").is_none() {
                     continue;
                 }
-                let Ok(mut agent) =
-                    russh::keys::agent::client::AgentClient::connect_env().await
+                let Ok(mut agent) = russh::keys::agent::client::AgentClient::connect_env().await
                 else {
                     continue;
                 };
@@ -240,10 +240,7 @@ async fn authenticate<S: SecretStore>(
                 match russh::keys::load_secret_key(path, passphrase.as_deref()) {
                     Ok(key) => {
                         let key = PrivateKeyWithHashAlg::new(Arc::new(key), None);
-                        match session
-                            .authenticate_publickey(&machine.ssh_user, key)
-                            .await
-                        {
+                        match session.authenticate_publickey(&machine.ssh_user, key).await {
                             Ok(res) if res.success() => return Ok(()),
                             _ => continue,
                         }
@@ -332,7 +329,8 @@ impl<S: SecretStore, H: HostKeyStore + 'static> RusshRunner<S, H> {
     /// record its fingerprint in the trust store (the "trust this host"
     /// action after a `HostKeyUntrusted` result).
     pub async fn trust_pending(&self, host: &str, port: u16) -> Result<(), ServiceError> {
-        let (session, captured) = connect_session::<H>(host, port, None, self.connect_timeout).await?;
+        let (session, captured) =
+            connect_session::<H>(host, port, None, self.connect_timeout).await?;
         drop(session);
         let fp = captured
             .take_fingerprint()
@@ -342,12 +340,8 @@ impl<S: SecretStore, H: HostKeyStore + 'static> RusshRunner<S, H> {
 }
 
 impl<S: SecretStore, H: HostKeyStore + 'static> SshRunner for RusshRunner<S, H> {
-    fn run(
-        &self,
-        machine: &Machine,
-        command: &str,
-    ) -> impl std::future::Future<Output = Result<CommandOutput, ServiceError>> + Send {
-        async move {
+    async fn run(&self, machine: &Machine, command: &str) -> Result<CommandOutput, ServiceError> {
+        {
             let mode = effective_mode(machine, self.default_secret_mode);
             let plan = auth_plan(machine, mode, true);
             let (mut session, _captured) = connect_session(

@@ -12,4 +12,3 @@ pub use secrets::InMemorySecretStore;
 pub use ssh::RusshRunner;
 pub use stats::SshStatsProbe;
 pub use wol::UdpWaker;
-

@@ -1,4 +1,4 @@
-use crate::config::{Config, ConfigError, CURRENT_SCHEMA, validate};
+use crate::config::{validate, Config, ConfigError, CURRENT_SCHEMA};
 
 #[derive(Debug)]
 pub enum LoadOutcome {
@@ -14,7 +14,9 @@ pub fn backup_filename(now_unix: i64) -> String {
 
 fn read_schema(text: &str) -> Option<u32> {
     let v: toml::Value = toml::from_str(text).ok()?;
-    v.get("schema_version").and_then(|s| s.as_integer()).map(|i| i as u32)
+    v.get("schema_version")
+        .and_then(|s| s.as_integer())
+        .map(|i| i as u32)
 }
 
 pub fn load_from_text(text: &str) -> LoadOutcome {
@@ -31,16 +33,26 @@ pub fn load_from_text(text: &str) -> LoadOutcome {
     }
     if found < CURRENT_SCHEMA {
         match migrate_chain(text, found) {
-            Ok(config) => return LoadOutcome::MigratedFrom { from: found, config },
-            Err(e) => return LoadOutcome::BackedUpAndReset {
-                reason: format!("migration from v{found} failed: {e}"),
-                config: Config::default(),
-            },
+            Ok(config) => {
+                return LoadOutcome::MigratedFrom {
+                    from: found,
+                    config,
+                }
+            }
+            Err(e) => {
+                return LoadOutcome::BackedUpAndReset {
+                    reason: format!("migration from v{found} failed: {e}"),
+                    config: Config::default(),
+                }
+            }
         }
     }
     match crate::config::parse_config(text) {
         Ok(config) => LoadOutcome::Loaded(config),
-        Err(e) => LoadOutcome::BackedUpAndReset { reason: e.to_string(), config: Config::default() },
+        Err(e) => LoadOutcome::BackedUpAndReset {
+            reason: e.to_string(),
+            config: Config::default(),
+        },
     }
 }
 
@@ -72,7 +84,10 @@ mod tests {
 
     #[test]
     fn future_schema_is_too_new() {
-        assert!(matches!(load_from_text("schema_version = 99"), LoadOutcome::TooNew { found: 99 }));
+        assert!(matches!(
+            load_from_text("schema_version = 99"),
+            LoadOutcome::TooNew { found: 99 }
+        ));
     }
 
     #[test]

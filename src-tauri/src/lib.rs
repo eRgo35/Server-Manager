@@ -19,7 +19,10 @@ pub fn run() {
     tauri::Builder::default()
         .manage(app_state.clone())
         .setup(|app| {
-            poller::spawn(app.handle().clone(), app.state::<Arc<state::AppState>>().inner().clone());
+            poller::spawn(
+                app.handle().clone(),
+                app.state::<Arc<state::AppState>>().inner().clone(),
+            );
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

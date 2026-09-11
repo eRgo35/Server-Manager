@@ -2,8 +2,8 @@
 
 use std::sync::Arc;
 
-use sm_core::{Machine, Stats, stats::PROC_STATS_CMD, parse_proc_stats};
-use sm_services::{ServiceError, StatsProbe, SshRunner};
+use sm_core::{parse_proc_stats, stats::PROC_STATS_CMD, Machine, Stats};
+use sm_services::{ServiceError, SshRunner, StatsProbe};
 
 /// Samples stats over SSH. When the machine defines a `stats_cmd`, its
 /// `key=value` output is parsed; otherwise the built-in [`PROC_STATS_CMD`]
@@ -32,9 +32,10 @@ fn parse_stats_cmd(stdout: &str) -> Result<Stats, ServiceError> {
         }
     }
     let get = |key: &str| {
-        values.get(key).copied().ok_or_else(|| {
-            ServiceError::Other(format!("stats_cmd missing key: {key}"))
-        })
+        values
+            .get(key)
+            .copied()
+            .ok_or_else(|| ServiceError::Other(format!("stats_cmd missing key: {key}")))
     };
     let f32_of = |key: &str| -> Result<f32, ServiceError> {
         let raw = get(key)?;
@@ -57,11 +58,8 @@ fn parse_stats_cmd(stdout: &str) -> Result<Stats, ServiceError> {
 }
 
 impl<R: SshRunner> StatsProbe for SshStatsProbe<R> {
-    fn sample(
-        &self,
-        machine: &Machine,
-    ) -> impl std::future::Future<Output = Result<Stats, ServiceError>> + Send {
-        async move {
+    async fn sample(&self, machine: &Machine) -> Result<Stats, ServiceError> {
+        {
             let command = machine
                 .stats_cmd
                 .as_deref()
@@ -76,8 +74,7 @@ impl<R: SshRunner> StatsProbe for SshStatsProbe<R> {
             }
             match &machine.stats_cmd {
                 Some(c) if !c.trim().is_empty() => parse_stats_cmd(&out.stdout),
-                _ => parse_proc_stats(&out.stdout)
-                    .map_err(|e| ServiceError::Other(e.to_string())),
+                _ => parse_proc_stats(&out.stdout).map_err(|e| ServiceError::Other(e.to_string())),
             }
         }
     }

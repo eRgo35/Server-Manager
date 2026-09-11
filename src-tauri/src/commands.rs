@@ -15,8 +15,8 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 use sm_core::{
-    Config, Machine, MachineId, PowerAction, SecretMode, Settings, Stats, needs_sudo, parse_mac,
-    resolve_power,
+    needs_sudo, parse_mac, resolve_power, Config, Machine, MachineId, PowerAction, SecretMode,
+    Settings, Stats,
 };
 use sm_services::{
     FileOpener, SecretKind, SecretStore, ServiceError, SshRunner, StatsProbe, StatusProbe, Waker,
@@ -360,10 +360,7 @@ pub async fn power(
 }
 
 #[tauri::command]
-pub async fn trust_host(
-    state: tauri::State<'_, Arc<AppState>>,
-    id: String,
-) -> Result<(), String> {
+pub async fn trust_host(state: tauri::State<'_, Arc<AppState>>, id: String) -> Result<(), String> {
     trust_host_inner(&state, id).await
 }
 
@@ -379,10 +376,7 @@ pub async fn provide_secret(
 }
 
 #[tauri::command]
-pub async fn open_files(
-    state: tauri::State<'_, Arc<AppState>>,
-    id: String,
-) -> Result<(), String> {
+pub async fn open_files(state: tauri::State<'_, Arc<AppState>>, id: String) -> Result<(), String> {
     open_files_inner(&state, id).await
 }
 

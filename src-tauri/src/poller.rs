@@ -43,7 +43,7 @@ fn plan_tick(online: bool, tick: u64, backoff: &mut BackoffState) -> TickPlan {
     }
     TickPlan {
         emit_status: true,
-        sample_stats: online && tick % STATS_EVERY == 0,
+        sample_stats: online && tick.is_multiple_of(STATS_EVERY),
         sleep_secs: backoff.current_delay_secs(),
     }
 }

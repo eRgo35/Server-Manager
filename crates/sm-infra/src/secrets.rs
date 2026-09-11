@@ -41,7 +41,12 @@ impl SecretStore for InMemorySecretStore {
             .cloned()
     }
 
-    fn set(&self, machine_id: &MachineId, kind: SecretKind, value: &str) -> Result<(), ServiceError> {
+    fn set(
+        &self,
+        machine_id: &MachineId,
+        kind: SecretKind,
+        value: &str,
+    ) -> Result<(), ServiceError> {
         self.map
             .lock()
             .unwrap()
@@ -50,7 +55,10 @@ impl SecretStore for InMemorySecretStore {
     }
 
     fn clear(&self, machine_id: &MachineId, kind: SecretKind) -> Result<(), ServiceError> {
-        self.map.lock().unwrap().remove(&(machine_id.to_string(), kind));
+        self.map
+            .lock()
+            .unwrap()
+            .remove(&(machine_id.to_string(), kind));
         Ok(())
     }
 }
@@ -58,7 +66,7 @@ impl SecretStore for InMemorySecretStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sm_services::{SecretStore, SecretKind};
+    use sm_services::{SecretKind, SecretStore};
 
     #[test]
     fn in_memory_roundtrip() {
@@ -66,7 +74,10 @@ mod tests {
         let id = sm_core::MachineId::from("nas");
         assert!(s.get(&id, SecretKind::SshPassword).is_none());
         s.set(&id, SecretKind::SshPassword, "hunter2").unwrap();
-        assert_eq!(s.get(&id, SecretKind::SshPassword).as_deref(), Some("hunter2"));
+        assert_eq!(
+            s.get(&id, SecretKind::SshPassword).as_deref(),
+            Some("hunter2")
+        );
         s.clear(&id, SecretKind::SshPassword).unwrap();
         assert!(s.get(&id, SecretKind::SshPassword).is_none());
     }

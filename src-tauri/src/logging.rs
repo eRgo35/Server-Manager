@@ -16,7 +16,10 @@ pub fn init_logging(paths: &Paths) {
     let file = match std::fs::File::create(&paths.log) {
         Ok(file) => file,
         Err(_) => {
-            eprintln!("warning: could not open {} for logging", paths.log.display());
+            eprintln!(
+                "warning: could not open {} for logging",
+                paths.log.display()
+            );
             tracing_subscriber::fmt().with_max_level(level).init();
             return;
         }
@@ -33,7 +36,11 @@ pub fn init_logging(paths: &Paths) {
 }
 
 fn level_filter() -> LevelFilter {
-    match std::env::var("SM_LOG").unwrap_or_default().to_ascii_lowercase().as_str() {
+    match std::env::var("SM_LOG")
+        .unwrap_or_default()
+        .to_ascii_lowercase()
+        .as_str()
+    {
         "trace" => LevelFilter::TRACE,
         "debug" => LevelFilter::DEBUG,
         "warn" => LevelFilter::WARN,

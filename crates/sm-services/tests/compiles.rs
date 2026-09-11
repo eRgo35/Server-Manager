@@ -10,57 +10,37 @@ use sm_services::{
 struct Dummy;
 
 impl Waker for Dummy {
-    fn wake(
-        &self,
-        _mac: [u8; 6],
-        _broadcast_addr: &str,
-    ) -> impl std::future::Future<Output = Result<(), ServiceError>> + Send {
-        async { Ok(()) }
+    async fn wake(&self, _mac: [u8; 6], _broadcast_addr: &str) -> Result<(), ServiceError> {
+        Ok(())
     }
 }
 
 impl StatusProbe for Dummy {
-    fn is_up(
-        &self,
-        _host: &str,
-        _port: u16,
-        _timeout: std::time::Duration,
-    ) -> impl std::future::Future<Output = bool> + Send {
-        async { false }
+    async fn is_up(&self, _host: &str, _port: u16, _timeout: std::time::Duration) -> bool {
+        false
     }
 }
 
 impl SshRunner for Dummy {
-    fn run(
-        &self,
-        _machine: &Machine,
-        _command: &str,
-    ) -> impl std::future::Future<Output = Result<CommandOutput, ServiceError>> + Send {
-        async {
-            Ok(CommandOutput {
-                code: 0,
-                stdout: String::new(),
-                stderr: String::new(),
-            })
-        }
+    async fn run(&self, _machine: &Machine, _command: &str) -> Result<CommandOutput, ServiceError> {
+        Ok(CommandOutput {
+            code: 0,
+            stdout: String::new(),
+            stderr: String::new(),
+        })
     }
 }
 
 impl StatsProbe for Dummy {
-    fn sample(
-        &self,
-        _machine: &Machine,
-    ) -> impl std::future::Future<Output = Result<Stats, ServiceError>> + Send {
-        async {
-            Ok(Stats {
-                cpu_pct: 0.0,
-                mem_used: 0,
-                mem_total: 0,
-                disk_used: 0,
-                disk_total: 0,
-                uptime_secs: 0,
-            })
-        }
+    async fn sample(&self, _machine: &Machine) -> Result<Stats, ServiceError> {
+        Ok(Stats {
+            cpu_pct: 0.0,
+            mem_used: 0,
+            mem_total: 0,
+            disk_used: 0,
+            disk_total: 0,
+            uptime_secs: 0,
+        })
     }
 }
 
@@ -127,7 +107,10 @@ fn _assert_send<T: Send>(_: T) {}
 async fn async_traits_await_on_dummy() {
     let d = Dummy;
     d.wake([0u8; 6], "255.255.255.255").await.unwrap();
-    assert!(!d.is_up("localhost", 22, std::time::Duration::from_millis(1)).await);
+    assert!(
+        !d.is_up("localhost", 22, std::time::Duration::from_millis(1))
+            .await
+    );
     let m = machine();
     let out = d.run(&m, "true").await.unwrap();
     assert_eq!(out.code, 0);
@@ -158,7 +141,11 @@ fn sync_traits_lock() {
 
     // ServiceError Display / thiserror wiring.
     assert_eq!(
-        ServiceError::Remote { code: 2, stderr: "boom".to_string() }.to_string(),
+        ServiceError::Remote {
+            code: 2,
+            stderr: "boom".to_string()
+        }
+        .to_string(),
         "remote command failed (2): boom"
     );
 }

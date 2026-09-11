@@ -4,8 +4,8 @@
 //! assets; `AppState` is managed by hand on the mock app.
 
 use serde_json::json;
-use tauri::Manager;
 use tauri::test::{mock_builder, mock_context, noop_assets};
+use tauri::Manager;
 
 use server_manager::commands;
 use server_manager::state::{AppState, Paths};
@@ -72,7 +72,10 @@ fn ipc(
             invoke_key: tauri::test::INVOKE_KEY.to_owned(),
         },
     )
-    .map(|b| b.deserialize::<serde_json::Value>().expect("payload is JSON"))
+    .map(|b| {
+        b.deserialize::<serde_json::Value>()
+            .expect("payload is JSON")
+    })
 }
 
 fn test_machine() -> Machine {
