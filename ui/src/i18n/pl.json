@@ -1,13 +1,11 @@
 {
   "status.online": "ONLINE",
   "status.offline": "OFFLINE",
-
   "action.wake": "Obudź",
-  "action.shutdown": "Zamknij",
+  "action.shutdown": "Wyłącz",
   "action.reboot": "Uruchom ponownie",
   "action.openFiles": "Otwórz pliki",
   "action.mapDrive": "Mapuj dysk",
-
   "settings.title": "Ustawienia",
   "settings.language": "Język",
   "settings.theme": "Motyw",
@@ -25,7 +23,6 @@
   "settings.statsGraph": "Wykres",
   "settings.secretPlaintext": "Zapis w konfiguracji",
   "settings.secretPrompt": "Pytaj (tylko sesja)",
-
   "machine.id": "ID",
   "machine.name": "Nazwa",
   "machine.mac": "MAC",
@@ -53,7 +50,6 @@
   "machine.deleteConfirm": "Usunąć maszynę „{name}”? Jej zapisane sekrety również zostaną usunięte.",
   "machine.saved": "Maszyna „{name}” zapisana",
   "machine.deleted": "Maszyna „{name}” usunięta",
-
   "toast.shareCopied": "Ścieżka udziału skopiowana",
   "toast.migrated": "Ustawienia przeniesione",
   "toast.settingsSaved": "Ustawienia zapisane",
@@ -68,21 +64,17 @@
   "toast.cancelledHostKey": "Anulowano — klucz hosta nie został zaufany.",
   "toast.cancelledSecret": "Anulowano — nie podano sekretu.",
   "toast.toggleSettings": "Przełącz ustawienia",
-
   "hostkey.prompt": "Klucz hosta SSH tego serwera nie jest jeszcze zaufany. Zaufać i kontynuować?",
   "hostkey.changed": "Klucz hosta SSH tego serwera ZMIENIŁ się od momentu ostatniego zaufania. Może to wskazywać na atak typu man-in-the-middle. Zaufać nowemu kluczowi i kontynuować?",
-
   "secret.required": "Podaj {kind} dla tej maszyny:",
   "secret.SshPassword": "hasło SSH",
   "secret.KeyPassphrase": "hasło klucza",
   "secret.SudoPassword": "hasło sudo",
-
   "stats.unavailable": "niedostępne",
   "stats.cpu": "CPU",
   "stats.mem": "RAM",
   "stats.disk": "Dysk",
   "stats.uptime": "Czas",
-
   "error.network": "Błąd sieci",
   "error.auth": "Uwierzytelnianie nie powiodło się",
   "error.hostKeyChanged": "Klucz hosta SSH się zmienił",
